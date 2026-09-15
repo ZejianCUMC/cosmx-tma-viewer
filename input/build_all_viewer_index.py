@@ -41,13 +41,12 @@ def natural_key(unit_id):
 
 FOVMETA = HERE.parent / "fov_meta_qc.tsv"
 
-_PATHCOL = {
-    "CIS": ("#f3d0d0", "#a11d1d"), "Possible CIS": ("#f7dede", "#a11d1d"),
-    "CIS/severe atypia": ("#f0c8c8", "#8a1616"), "CIS + invasive HG": ("#e3a9a9", "#7a1414"),
-    "Invasive": ("#e0b0b0", "#7a1414"), "HG invasive": ("#e0b0b0", "#7a1414"),
-    "Epithelium": ("#cdeccf", "#1d6b2c"), "Atypia": ("#f7e2c0", "#8a5a12"),
-    "LG Ta": ("#d3ddf5", "#274a9e"), "HG Ta": ("#c3d0f0", "#274a9e"),
-}
+# Pathology-label -> (background, foreground) chip colours for the landing page.
+# The label vocabulary is study-specific, so it lives in cohort_config.json
+# ("index": {"path_colors": {...}}). Unlisted labels fall back to neutral grey.
+_PATHCOL = {k: tuple(v) for k, v in
+            ((_COHORT.get("index") or {}).get("path_colors") or {}).items()
+            if not k.startswith("_")}
 def _pcol(dx):
     return _PATHCOL.get(dx, ("#e5e8ec", "#5a6472"))
 
