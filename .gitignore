@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------
+# This repository holds SCRIPTS ONLY.
+#
+# Built viewers embed per-patient clinical metadata (sex, age, grade, stage,
+# treatment timepoint, outcome, time-to-recurrence) and are 5-80 MB each, so
+# they must never be committed. Neither must any source matrix, label table or
+# clinical workbook. The rules below fail closed: data extensions are ignored
+# everywhere, and the only .html tracked is the viewer template.
+# ---------------------------------------------------------------------------
+
+# Built viewers and landing pages (contain patient clinical metadata)
+*.html
+!input/sample_viewer_template.html
+!**/sample_viewer_template*.html
+
+# Cohort-specific values (unit ids, per-unit pathology labels, cohort counts).
+# Study data, not code. Only the placeholder example is tracked.
+cohort_config.json
+!cohort_config.example.json
+
+# Embedded morphology mosaics handed to the builder
+rawimg_*.json
+
+# Source data: expression matrices, labels, clinical tables, QC tables
+*.h5ad
+*.h5
+*.loom
+*.rds
+*.mtx
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.tsv.gz
+*.txt.gz
+fov_meta_qc*
+viewer_units*
+units.txt
+
+# Figures and renders
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+
+# Run artifacts
+*.log
+slurm-*.out
+work/
+work_raw/
+viewer/
+viewers/
+*_bak_*/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Local environment / editor
+.env
+.venv/
+.DS_Store

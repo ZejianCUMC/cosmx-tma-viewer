@@ -1,0 +1,30 @@
+{
+  "_comment": [
+    "Cohort-specific expectations for the viewer pipeline. Copy to",
+    "cohort_config.json and fill in for your own cohort. cohort_config.json is",
+    "gitignored on purpose: unit ids, per-unit pathology labels and cohort",
+    "counts are study data, not code, and must not be committed.",
+    "Every key is optional. A missing key disables the check that uses it."
+  ],
+
+  "important_regions": {
+    "_comment": "Manually curated important regions, keyed \"<unit>|<slide>\". cx_world/cy_world/r_um are original world microns; pdx is the region label drawn on the overlay.",
+    "EXAMPLE_UNIT|TMA_1": {"cx_world": 0.0, "cy_world": 0.0, "r_um": 100.0, "pdx": "EXAMPLE_LABEL"}
+  },
+
+  "expected": {
+    "_comment": "Cohort-integrity checks in verify_viewer_features.py. Set to null to skip an individual check.",
+    "units": null,
+    "cell_total": null,
+    "multi_slide_units": [],
+    "outcome_allowed": [],
+    "region_units": {
+      "EXAMPLE_UNIT": {"pdx": "EXAMPLE_LABEL", "approx_cells": 100, "min_pts": 8}
+    }
+  },
+
+  "index": {
+    "_comment": "Landing-page decoration in build_all_viewer_index.py.",
+    "region_badge_units": {}
+  }
+}

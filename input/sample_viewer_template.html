@@ -1,0 +1,181 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CGC CosMx viewer — CIS FOV</title>
+<style>
+:root{--bg:#0f1216;--panel:#161b22;--edge:#2a313c;--fg:#e6edf3;--mut:#9aa4b2;--accent:#4da3ff;--chip:#1d2530}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+#app{display:flex;flex-direction:column;height:100vh}
+header{padding:8px 14px;border-bottom:1px solid var(--edge);display:flex;flex-direction:column;gap:6px}
+.hrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:15px;margin:0;font-weight:600}
+.sub{color:var(--mut);font-size:12px}
+.gc{display:flex;align-items:center;gap:6px;color:var(--mut)}
+.gc input[type=range]{width:96px}
+button{background:var(--panel);color:var(--fg);border:1px solid var(--edge);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px}
+button:hover{border-color:var(--accent)}
+.patrow{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:var(--chip);border:1px solid var(--edge);border-radius:5px;padding:2px 7px;font-size:11px;white-space:nowrap}
+.chip b{color:var(--accent);font-weight:600;margin-right:3px}
+.chip.warn b{color:#ff8a5b}
+.panels{flex:1;display:flex;gap:1px;background:var(--edge);min-height:0}
+.panel{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0;position:relative}
+.pbar{padding:6px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--edge);background:var(--panel)}
+.pbar .cat{color:var(--mut);font-size:11px;white-space:nowrap}
+.combo{position:relative;flex:1;max-width:320px}
+.combo-input{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--edge);border-radius:6px;padding:6px 9px;font-size:12px;cursor:pointer;text-align:left}
+.combo-input:hover{border-color:var(--accent)}
+.combo-pop{position:absolute;z-index:20;top:calc(100% + 3px);left:0;right:0;background:var(--panel);border:1px solid var(--accent);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden}
+.combo-search{width:100%;background:var(--bg);color:var(--fg);border:none;border-bottom:1px solid var(--edge);padding:8px 10px;font-size:12px;outline:none}
+.combo-list{max-height:320px;overflow:auto}
+.combo-item{padding:6px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid rgba(128,128,128,.08)}
+.combo-item:hover{background:var(--accent);color:#fff}
+.combo-item.sel{color:var(--accent);font-weight:600}
+.combo-item.hdr{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.05em;cursor:default;background:transparent;padding:6px 10px 2px}
+.combo-item.hdr:hover{background:transparent;color:var(--mut)}
+.pbody{flex:1;display:flex;min-height:0}
+.cvwrap{flex:1;position:relative;min-height:0}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.legend{width:214px;flex:none;overflow:auto;background:var(--panel);border-left:1px solid var(--edge);padding:12px;color:var(--fg)}
+.legend .lt{font-weight:600;margin-bottom:5px;font-size:12px}
+.legend .li{display:flex;align-items:center;gap:7px;margin:3px 0;font-size:11.5px;color:var(--fg)}
+.legend .sw{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(128,128,128,.35);cursor:pointer}
+.legend .sw:hover{outline:2px solid var(--accent);outline-offset:1px}
+.legend .cnt{color:var(--mut);font-size:10.5px}
+.legend .li[data-cat]{cursor:pointer;border-radius:4px;padding:1px 3px;user-select:none}
+.legend .li[data-cat]:hover{background:var(--chip)}
+.legend .li.hid{opacity:.34;text-decoration:line-through}
+.legend .li.hi{outline:2px solid var(--accent);outline-offset:-2px;font-weight:600}
+.legend .lt[data-reset]{cursor:pointer}
+.legend .lhint{color:var(--mut);font-size:9.5px;margin:2px 0 6px;font-style:italic}
+.cbar{width:154px;height:12px;border-radius:3px;margin:5px 0;border:1px solid var(--edge)}
+.cbnums{display:flex;justify-content:space-between;color:var(--mut);font-size:10px}
+.note{color:var(--mut);font-size:10.5px;margin-top:3px}
+.tt{position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:6px 9px;font-size:11px;z-index:30;display:none;max-width:240px;box-shadow:0 3px 12px rgba(0,0,0,.4)}
+.tt b{color:var(--accent)}
+@media (prefers-color-scheme:light){:root{--bg:#f6f8fa;--panel:#fff;--edge:#d0d7de;--fg:#1f2328;--mut:#57606a;--chip:#eef1f4}}
+:root[data-theme=dark]{--bg:#0f1216;--panel:#161b22;--edge:#2a313c;--fg:#e6edf3;--mut:#9aa4b2;--chip:#1d2530}
+:root[data-theme=light]{--bg:#f6f8fa;--panel:#fff;--edge:#d0d7de;--fg:#1f2328;--mut:#57606a;--chip:#eef1f4}
+</style></head>
+<body><div id="app">
+<header>
+ <div class="hrow">
+  <h1>CGC CosMx viewer</h1><span class="sub" id="finfo">—</span>
+  <span class="gc">size <input type="range" id="psz" min="1" max="9" step="0.5" value="3.5"></span>
+  <span class="gc">opacity <input type="range" id="pop" min="0.2" max="1" step="0.05" value="0.9"></span>
+  <span class="gc" id="gmaxwrap" style="display:none">gene max <input type="range" id="gmax" min="5" max="100" step="1" value="100"><span id="gmaxlbl" style="font-size:10px;color:var(--mut)">100%</span></span>
+  <span class="gc"><label style="cursor:pointer;user-select:none"><input type="checkbox" id="regionchk" style="vertical-align:middle"> Important region</label></span>
+  <button id="reset">Reset view</button>
+  <span class="sub">wheel=zoom · drag=pan · synced · hover=cell</span>
+ </div>
+ <div class="patrow" id="patinfo"></div>
+</header>
+<div class="panels">
+ <div class="panel"><div class="pbar"><span class="cat">Left</span>
+   <div class="combo"><button class="combo-input" id="ci0"></button><div class="combo-pop" id="cp0" hidden><input class="combo-search" id="cs0" placeholder="search cell type / gene / channel…"><div class="combo-list" id="cl0"></div></div></div></div>
+  <div class="pbody"><div class="cvwrap"><canvas id="c0"></canvas></div><div class="legend" id="lg0"></div></div></div>
+ <div class="panel"><div class="pbar"><span class="cat">Right</span>
+   <div class="combo"><button class="combo-input" id="ci1"></button><div class="combo-pop" id="cp1" hidden><input class="combo-search" id="cs1" placeholder="search cell type / gene / channel…"><div class="combo-list" id="cl1"></div></div></div></div>
+  <div class="pbody"><div class="cvwrap"><canvas id="c1"></canvas></div><div class="legend" id="lg1"></div></div></div>
+</div>
+<div class="tt" id="tt"></div>
+</div>
+<script>
+const DATA=__DATA__; const N=DATA.n;
+const MAJORPAL={Epithelial:"#e6194B",Fibroblast:"#9A6324",Tcell:"#4363d8",Myeloid:"#f58231",Plasma:"#911eb4",Bcell:"#3cb44b",Endothelial:"#f032e6",Mast:"#42d4f4"};
+const PAL20=["#4363d8","#3cb44b","#f58231","#911eb4","#42d4f4","#f032e6","#bfef45","#fabed4","#469990","#dcbeff","#9A6324","#800000","#aaffc3","#808000","#ffd8b1","#000075","#e6194B","#a9a9a9","#ffe119","#00d0b0"];
+function buildPal(vals){const u=[...new Set(vals)].sort();const m={};let i=0;u.forEach(v=>{if(/unresolved/i.test(v))m[v]="#b9c0c9";else if(v==="LowQuality")m[v]="#d9d9d9";else if(v==="Other")m[v]="#c4ccd4";else if(v==="Tumor")m[v]="#e6194B";else if(MAJORPAL[v])m[v]=MAJORPAL[v];else{m[v]=PAL20[i%20];i++}});return m}
+const CATS={"__type__":{label:"Cell type (major)",vals:DATA.type},"__subtype__":{label:"Subtype · L3 detailed",vals:DATA.subtype},"__subL2__":{label:"Subtype · L2 (Lum/Basal/…)",vals:DATA.subL2},"__tumor__":{label:"Tumor · putative (PanCK+cluster)",vals:DATA.tumor.map(v=>v?"Tumor":"Other")}};
+Object.values(CATS).forEach(c=>c.pal=buildPal(c.vals));
+// --- editable palette: click a legend swatch to recolor a cell type (persisted) ---
+const PAL_LS_KEY="cgc_pal_overrides_v1";let PAL_OVERRIDE={};try{PAL_OVERRIDE=JSON.parse(localStorage.getItem(PAL_LS_KEY)||"{}")||{}}catch(e){PAL_OVERRIDE={}}
+Object.keys(CATS).forEach(k=>{const o=PAL_OVERRIDE[k];if(o)Object.keys(o).forEach(v=>{CATS[k].pal[v]=o[v]})});
+const _colorInput=document.createElement("input");_colorInput.type="color";_colorInput.style.cssText="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0";document.body.appendChild(_colorInput);
+let _colorTarget=null;
+function _toHex(c){if(!c)return"#888888";if(c[0]==="#"){return c.length===4?("#"+c[1]+c[1]+c[2]+c[2]+c[3]+c[3]):c.slice(0,7)}const m=c.match(/\d+/g);return(m&&m.length>=3)?("#"+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,"0")).join("")):"#888888"}
+_colorInput.addEventListener("input",()=>{if(!_colorTarget)return;const t=_colorTarget;CATS[t.catKey].pal[t.val]=_colorInput.value;(PAL_OVERRIDE[t.catKey]=PAL_OVERRIDE[t.catKey]||{})[t.val]=_colorInput.value;try{localStorage.setItem(PAL_LS_KEY,JSON.stringify(PAL_OVERRIDE))}catch(e){}panels.forEach(pp=>{if((FEATS.find(x=>x.k===pp.feat)||{}).k===t.catKey)drawP(pp)})});
+
+const VIR=[[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[110,206,88],[181,222,43],[253,231,37]];
+function viridis(t){t=Math.max(0,Math.min(1,t));const x=t*9,i=Math.floor(x),f=x-i,a=VIR[i],b=VIR[Math.min(9,i+1)];return`rgb(${a[0]+(b[0]-a[0])*f|0},${a[1]+(b[1]-a[1])*f|0},${a[2]+(b[2]-a[2])*f|0})`}
+const RNG={};function range(arr){const s=arr.filter(v=>v>0).slice().sort((a,b)=>a-b);if(!s.length)return[0,1];const lo=s[Math.floor(s.length*0.02)],hi=s[Math.floor(s.length*0.98)]||s[s.length-1];return[lo,hi>lo?hi:lo+1]}
+// channel ranges for RGB modes
+const CHN={};["PanCK","CD45","DAPI","Membrane","G"].forEach(c=>{if(DATA.channels[c])CHN[c]=range(DATA.channels[c])});
+function nrm(v,r){return Math.max(0,Math.min(1,(v-r[0])/(r[1]-r[0])))}
+function rgbRaw(i){const r=nrm(DATA.channels.PanCK[i],CHN.PanCK),g=nrm(DATA.channels.CD45[i],CHN.CD45),b=nrm(DATA.channels.DAPI[i],CHN.DAPI);return`rgb(${r*255|0},${g*255|0},${b*255|0})`}
+function rgbPath(i){const h=nrm(DATA.channels.DAPI[i],CHN.DAPI),e=nrm(DATA.channels.PanCK[i],CHN.PanCK);const R=255*(1-0.55*h-0.05*e),G=255*(1-0.72*h-0.55*e),B=255*(1-0.20*h-0.28*e);return`rgb(${Math.max(0,R)|0},${Math.max(0,G)|0},${Math.max(0,B)|0})`}
+// feature registry
+const FEATS=[{k:"__type__",kind:"cat",grp:"Cell types"},{k:"__subtype__",kind:"cat",grp:"Cell types"},{k:"__subL2__",kind:"cat",grp:"Cell types"},{k:"__tumor__",kind:"cat",grp:"Cell types"}];
+if(DATA.rawImage) FEATS.push({k:"__rawimg__",label:"RAW morphology — CellComposite image",kind:"rawimg",grp:"Morphology image"});
+FEATS.push({k:"__rgbpath__",label:"Pathology — virtual H&E (per-cell)",kind:"rgbpath",grp:"Composite RGB"});
+FEATS.filter(f=>CATS[f.k]).forEach(f=>f.label=CATS[f.k].label);
+Object.keys(DATA.channels).forEach(c=>FEATS.push({k:"ch:"+c,label:"Channel · "+c,kind:"num",arr:DATA.channels[c],grp:"IF channels"}));
+// --- ALL-gene sparse store (base64 UInt8 codes, per-gene max) ---
+function _b64b(x){const bin=atob(x),n=bin.length,b=new Uint8Array(n);for(let i=0;i<n;i++)b[i]=bin.charCodeAt(i);return b}
+let GS=null,GMAX=null,GNAMES=null,GLIM=1.0;
+if(DATA.geneSparse){const g=DATA.geneSparse;GS={indptr:new Int32Array(_b64b(g.indptr).buffer),idx:new Uint16Array(_b64b(g.indices).buffer),val:_b64b(g.data)};GMAX=g.geneMax;GNAMES=g.names;GNAMES.forEach((nm,gi)=>FEATS.push({k:"g:"+nm,label:"Gene · "+nm,kind:"gene",gi:gi,grp:"Genes ("+GNAMES.length+")"}));}
+else if(DATA.genes){Object.keys(DATA.genes).forEach(g=>FEATS.push({k:"g:"+g,label:"Gene · "+g,kind:"num",arr:DATA.genes[g],grp:"Genes ("+Object.keys(DATA.genes).length+")"}));}
+const _geneCache={};
+function geneCodes(gi){if(_geneCache[gi])return _geneCache[gi];const out=new Uint8Array(N),ip=GS.indptr,ix=GS.idx,vl=GS.val;for(let r=0;r<N;r++){for(let k=ip[r];k<ip[r+1];k++){if(ix[k]===gi){out[r]=vl[k];break}}}_geneCache[gi]=out;return out}
+function viridisR(t){return viridis(1-Math.max(0,Math.min(1,t)))}
+// patient header
+const PAT=DATA.patient||{};
+document.getElementById("patinfo").innerHTML=Object.entries(PAT).filter(([k,v])=>v&&v!=="NA"&&v!=="nan").map(([k,v])=>{if(k==="Age")v=parseFloat(v).toFixed(0)+"y";if(k==="TTR (months)")v=parseFloat(v).toFixed(1)+" mo";const warn=(k==="Progression"&&v==="Yes")||(k==="Outcome"&&/PROGRE|DECEAS/i.test(v));return`<span class="chip${warn?" warn":""}"><b>${k}</b>${v}</span>`}).join("");
+document.getElementById("finfo").textContent=`${DATA.sample||DATA.fov} · ${N.toLocaleString()} cells${DATA.fovs?" · "+DATA.fovs+" FOVs":""} · ${(DATA.meta.pathdx&&DATA.meta.pathdx[0])||"CIS"}`;
+// coords (sample = global microns, flip y so tissue is upright; CIS FOV = local px, no flip)
+const XS=DATA.x,YS=DATA.y.slice();
+if(DATA.global){const a=Math.min(...YS),b=Math.max(...YS);for(let i=0;i<N;i++)YS[i]=b-(YS[i]-a)}
+let minx=Math.min(...XS),maxx=Math.max(...XS),miny=Math.min(...YS),maxy=Math.max(...YS);
+const W0=maxx-minx||1,H0=maxy-miny||1;
+let view={s:1,tx:0,ty:0},fitted=false,PSZ=3.5,POP=0.9,DPR=Math.max(1,window.devicePixelRatio||1);
+const panels=[{id:0,feat:"__type__"},{id:1,feat:DATA.rawImage?"__rawimg__":"__rgbpath__"}];
+panels.forEach(p=>{p.cv=document.getElementById("c"+p.id);p.ctx=p.cv.getContext("2d");p.lg=document.getElementById("lg"+p.id);
+ p.input=document.getElementById("ci"+p.id);p.pop=document.getElementById("cp"+p.id);p.search=document.getElementById("cs"+p.id);p.list=document.getElementById("cl"+p.id);
+ p.state=new Map([["LowQuality",2]]);
+ p.lg.addEventListener("click",e=>{const f=FEATS.find(x=>x.k===p.feat);if(!f||f.kind!=="cat")return;const _swli=(e.target.classList&&e.target.classList.contains("sw"))?e.target.closest(".li[data-cat]"):null;if(_swli){e.stopPropagation();_colorTarget={p,catKey:p.feat,val:_swli.dataset.cat};_colorInput.value=_toHex(CATS[p.feat].pal[_swli.dataset.cat]);_colorInput.click();return}if(e.target.closest(".lt")){p.state=new Map([["LowQuality",2]]);drawP(p);return}const li=e.target.closest(".li[data-cat]");if(!li)return;const c=li.dataset.cat,s=(p.state.get(c)||0)+1;if(s>=3)p.state.delete(c);else p.state.set(c,s);drawP(p)});
+ p.input.textContent=FEATS.find(f=>f.k===p.feat).label;
+ p.input.onclick=e=>{e.stopPropagation();const open=!p.pop.hidden;closeAll();if(!open){p.pop.hidden=false;p.search.value="";renderList(p,"");p.search.focus()}};
+ p.search.oninput=()=>renderList(p,p.search.value);p.search.onclick=e=>e.stopPropagation();});
+function closeAll(){panels.forEach(p=>p.pop.hidden=true)}
+document.addEventListener("click",closeAll);
+function renderList(p,q){q=q.toLowerCase();p.list.innerHTML="";let lastGrp="";FEATS.filter(f=>f.label.toLowerCase().includes(q)).forEach(f=>{
+ if(f.grp&&f.grp!==lastGrp){lastGrp=f.grp;const h=document.createElement("div");h.className="combo-item hdr";h.textContent=f.grp;p.list.appendChild(h)}
+ const it=document.createElement("div");it.className="combo-item"+(f.k===p.feat?" sel":"");it.textContent=f.label;it.onclick=e=>{e.stopPropagation();p.feat=f.k;p.input.textContent=f.label;p.pop.hidden=true;p.state=new Map([["LowQuality",2]]);drawP(p)};p.list.appendChild(it)})}
+function resize(){panels.forEach(p=>{const r=p.cv.parentElement.getBoundingClientRect();p.cv.width=r.width*DPR;p.cv.height=r.height*DPR;p.W=r.width;p.H=r.height});if(!fitted){fit();fitted=true}drawAll()}
+function fit(){const p=panels[0],pad=22,sx=(p.W-2*pad)/W0,sy=(p.H-2*pad)/H0;view.s=Math.min(sx,sy);view.tx=(p.W-W0*view.s)/2-minx*view.s;view.ty=(p.H-H0*view.s)/2-miny*view.s}
+const SX=x=>x*view.s+view.tx,SY=y=>y*view.s+view.ty;
+function _updGmaxUI(){const any=panels.some(p=>{const f=FEATS.find(x=>x.k===p.feat);return f&&f.kind==="gene"});const w=document.getElementById("gmaxwrap");if(w)w.style.display=any?"":"none"}
+function drawAll(){panels.forEach(drawP);_updGmaxUI()}
+function drawP(p){const ctx=p.ctx,f=FEATS.find(x=>x.k===p.feat);ctx.setTransform(DPR,0,0,DPR,0,0);if(typeof _updGmaxUI==="function")_updGmaxUI();
+ if(f.kind==="rawimg"){ctx.fillStyle="#000";ctx.fillRect(0,0,p.W,p.H);if(RAWIMG&&RAWIMG.complete&&RAWIMG.naturalWidth){const e=DATA.rawExtent;ctx.imageSmoothingEnabled=true;ctx.drawImage(RAWIMG,SX(e[0]),SY(e[1]),(e[2]-e[0])*view.s,(e[3]-e[1])*view.s)}drawRegion(p);legend(p,f);return}
+ if(f.kind==="rgbpath"){ctx.fillStyle="#ffffff";ctx.fillRect(0,0,p.W,p.H)}else if(f.kind==="rgbraw"){ctx.fillStyle="#000000";ctx.fillRect(0,0,p.W,p.H)}else ctx.clearRect(0,0,p.W,p.H);
+ ctx.globalAlpha=POP;let rng=null,vals=null,pal=null;
+ if(f.kind==="num"){if(!RNG[f.k])RNG[f.k]=range(f.arr);rng=RNG[f.k]}else if(f.kind==="cat"){vals=CATS[f.k].vals;pal=CATS[f.k].pal}
+ let _gc=null;if(f.kind==="gene"){_gc=geneCodes(f.gi)}
+ const _hi=[];for(let i=0;i<N;i++){if(f.kind==="cat"&&p.state){const _st=p.state.get(vals[i])||0;if(_st===2)continue;if(_st===1){_hi.push(i);continue}}const X=SX(XS[i]),Y=SY(YS[i]);if(X<-5||X>p.W+5||Y<-5||Y>p.H+5)continue;let col;
+   if(f.kind==="cat")col=pal[vals[i]]||"#888";else if(f.kind==="num")col=viridis((f.arr[i]-rng[0])/(rng[1]-rng[0]));else if(f.kind==="gene")col=viridisR(_gc[i]/(255*GLIM));else if(f.kind==="rgbraw")col=rgbRaw(i);else col=rgbPath(i);
+   ctx.fillStyle=col;ctx.beginPath();ctx.arc(X,Y,PSZ,0,6.2832);ctx.fill()}
+ if(f.kind==="cat"&&_hi.length){const _hp=CATS[f.k].pal;ctx.globalAlpha=POP;for(const i of _hi){const X=SX(XS[i]),Y=SY(YS[i]);if(X<-5||X>p.W+5||Y<-5||Y>p.H+5)continue;ctx.fillStyle=_hp[vals[i]]||"#888";ctx.beginPath();ctx.arc(X,Y,PSZ*1.5,0,6.2832);ctx.fill()}}ctx.globalAlpha=1;drawRegion(p);legend(p,f,rng)}
+function legend(p,f,rng){let h="";
+ if(f.kind==="cat"){const pal=CATS[f.k].pal,cnt={};CATS[f.k].vals.forEach(v=>cnt[v]=(cnt[v]||0)+1);const u=[...new Set(CATS[f.k].vals)].sort((a,b)=>cnt[b]-cnt[a]);
+   const anyH=p.state&&p.state.size>0;h=`<div class="lt" data-reset title="click to reset all">${f.label}${anyH?' <span class=&quot;cnt&quot;>(reset)</span>':''}</div><div class="lhint">click type: highlight(1.5x) → hide → normal · title=reset · click swatch=change color</div>`+u.map(v=>{const st=p.state?(p.state.get(v)||0):0;return `<div class="li${st===1?" hi":""}${st===2?" hid":""}" data-cat="${v}"><span class="sw" title="click to change color" style="background:${pal[v]}"></span>${v} <span class="cnt">(${cnt[v]})</span></div>`}).join("")}
+ else if(f.kind==="rgbraw"){h=`<div class="lt">RAW IF composite</div><div class="li"><span class="sw" style="background:#ff3b3b"></span>PanCK (epithelium)</div><div class="li"><span class="sw" style="background:#3bff3b"></span>CD45 (immune)</div><div class="li"><span class="sw" style="background:#3b6bff"></span>DAPI (nuclei)</div><div class="note">additive fluorescence · black bg</div>`}
+ else if(f.kind==="rgbpath"){h=`<div class="lt">Virtual H&amp;E</div><div class="li"><span class="sw" style="background:#5b2a83"></span>Nuclei — DAPI (hematoxylin)</div><div class="li"><span class="sw" style="background:#e58fbf"></span>Cytoplasm — PanCK (eosin)</div><div class="note">per-cell composite of IF channels</div>`}
+ else if(f.kind==="rawimg"){h=`<div class="lt">CellComposite morphology</div><div class="li"><span class="sw" style="background:#2bd42b"></span>PanCK / cytokeratin (green)</div><div class="li"><span class="sw" style="background:#3b6bff"></span>DAPI nuclei (blue)</div><div class="li"><span class="sw" style="background:#e63b3b"></span>other IF (red)</div><div class="note">actual CosMx morphology image (raw pixels) · zoom/pan synced</div>`}
+ else if(f.kind==="gene"){const gm=GMAX[f.gi]*GLIM,st=[];for(let i=0;i<=10;i++)st.push(viridisR(i/10));h=`<div class="lt">${f.label}</div><div class="cbar" style="background:linear-gradient(90deg,${st.join(",")})"></div><div class="cbnums"><span>0</span><span>${gm.toFixed(2)}</span></div><div class="note">log-norm expr · reverse-viridis (dark=high) · scale max ${(GLIM*100)|0}% of gene max ${GMAX[f.gi].toFixed(2)}</div>`} else{const st=[];for(let i=0;i<=10;i++)st.push(viridis(i/10));h=`<div class="lt">${f.label}</div><div class="cbar" style="background:linear-gradient(90deg,${st.join(",")})"></div><div class="cbnums"><span>${rng[0].toFixed(1)}</span><span>${rng[1].toFixed(1)}</span></div><div class="note">2–98th pct · ${f.k.startsWith("ch:")?"IF signal":"log-norm expr"}</div>`}
+ p.lg.innerHTML=h}
+function onWheel(e){e.preventDefault();const p=panels.find(q=>q.cv===e.target)||panels[0];const r=p.cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,k=Math.exp(-e.deltaY*0.0015),wx=(mx-view.tx)/view.s,wy=(my-view.ty)/view.s;view.s*=k;view.tx=mx-wx*view.s;view.ty=my-wy*view.s;drawAll()}
+let drag=null;const tt=document.getElementById("tt");
+function onDown(e){drag={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty}}
+function onMove(e){if(drag){view.tx=drag.tx+(e.clientX-drag.x);view.ty=drag.ty+(e.clientY-drag.y);drawAll();return}hover(e)}
+function hover(e){const p=panels.find(q=>q.cv===e.target);if(!p)return;const r=p.cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;let best=-1,bd=64;for(let i=0;i<N;i++){const dx=SX(XS[i])-mx,dy=SY(YS[i])-my,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}}if(best<0){tt.style.display="none";return}const f=FEATS.find(x=>x.k===p.feat);let val=f.kind==="cat"?CATS[f.k].vals[best]:(f.kind==="num"?f.arr[best].toFixed(f.k.startsWith("ch:")?0:2):(f.kind==="gene"?(geneCodes(f.gi)[best]/255*GMAX[f.gi]).toFixed(2):"—"));tt.innerHTML=`<b>${DATA.type[best]}</b> / ${DATA.subtype[best]}<br>${DATA.tumor[best]?"<b style='color:#ff6b6b'>TUMOR</b> · ":""}${Array.isArray(DATA.fov)?"FOV "+DATA.fov[best]+" · ":""}PanCK ${DATA.channels.PanCK[best]|0}<br>${f.kind==="cat"||f.kind==="num"||f.kind==="gene"?f.label+": <b>"+val+"</b>":f.label}`;tt.style.left=(e.clientX+14)+"px";tt.style.top=(e.clientY+14)+"px";tt.style.display="block"}
+panels.forEach(p=>{p.cv.addEventListener("wheel",onWheel,{passive:false});p.cv.addEventListener("mousedown",onDown);p.cv.addEventListener("mousemove",onMove);p.cv.addEventListener("mouseleave",()=>tt.style.display="none")});
+window.addEventListener("mouseup",()=>drag=null);
+document.getElementById("psz").oninput=e=>{PSZ=+e.target.value;drawAll()};
+document.getElementById("pop").oninput=e=>{POP=+e.target.value;drawAll()};
+document.getElementById("gmax").oninput=e=>{GLIM=+e.target.value/100;document.getElementById("gmaxlbl").textContent=e.target.value+"%";drawAll()};
+document.getElementById("reset").onclick=()=>{fit();drawAll()};
+let RAWIMG=null;if(DATA.rawImage){RAWIMG=new Image();RAWIMG.onload=()=>drawAll();RAWIMG.src=DATA.rawImage}
+let showRegion=false;
+function drawRegion(p){if(!showRegion||!DATA.importantRegion)return;const ctx=p.ctx,R=DATA.importantRegion;if(DATA._ymm===undefined){let a=Infinity,b=-Infinity;for(let i=0;i<DATA.y.length;i++){const v=DATA.y[i];if(v<a)a=v;if(v>b)b=v}DATA._ymm=a+b}const fy=y=>DATA.global?(DATA._ymm-y):y;ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.strokeStyle="#ffd400";ctx.lineWidth=2.2;ctx.setLineDash([8,5]);ctx.beginPath();R.poly.forEach((pt,i)=>{const X=SX(pt[0]),Y=SY(fy(pt[1]));i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.closePath();ctx.stroke();if(R.cx!==undefined&&R.cy!==undefined){const X=SX(R.cx),Y=SY(fy(R.cy));ctx.fillStyle="rgba(255,212,0,0.95)";ctx.font="bold 12px sans-serif";ctx.fillText("Potential important region"+(R.pdx?" ("+R.pdx+")":""), X+6, Y-8)}ctx.restore()}
+(function(){const _c=document.getElementById("regionchk");if(!_c)return;if(!DATA.importantRegion){_c.disabled=true;_c.parentElement.style.opacity=0.45;_c.parentElement.title="No important region for this patient"}_c.onchange=e=>{showRegion=e.target.checked;drawAll()}})();
+window.addEventListener("resize",resize);resize();
+</script></body></html>
