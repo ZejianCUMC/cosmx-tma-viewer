@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # =============================================================================
-# CGC viewer — split each authoritative core_id into physical SUB-CORES
+# viewer — split each authoritative core_id into physical SUB-CORES
 # =============================================================================
 # Description : One TMA core_id can cover two physically separate tissue pieces
 #               (verified: <unit> <core_id> = FOVs 52-59 and 60-64, two blobs ~3 mm

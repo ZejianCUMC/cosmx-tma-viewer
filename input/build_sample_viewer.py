@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # =============================================================================
-# CGC per-patient spatial-viewer generator  (LOCAL, token-free)
+# CosMx per-unit spatial-viewer generator  (LOCAL, token-free)
 # =============================================================================
 # Description : Parameterized generalization of extract_sample.py + template
 #               injection. For a given patient (and slide) it builds the DATA
@@ -8,14 +8,14 @@
 #               viewer template, and (if available) embeds the per-unit RAW
 #               morphology mosaic (rawImage/rawExtent from rawimg_<unit>.json).
 # Unit model  : a "unit" = (patient_id, slide). Single-slide patients -> one
-#               viewer  CGC_<PATIENT>_sample_viewer.html ; multi-slide patients
-#               -> one per slide  CGC_<PATIENT>_<SLIDE>_sample_viewer.html.
-# Input       : result/majortype_clean/CGC_squidpy.h5ad  (obs index = barcode;
+#               viewer  <prefix><UNIT>_sample_viewer.html ; multi-slide units
+#               -> one per slide  <prefix><UNIT>_<SLIDE>_sample_viewer.html.
+# Input       : the cell object .h5ad  (obs index = barcode;
 #                                                          X = CSR log1p)
 #               subtype/cgc_hierarchical_labels_v6.tsv.gz    (L2/L3/tumor_putative)
 #               sample_viewer_template.html               (DATA -> __DATA__)
 #               [rawimg_<unit>.json]  {rawImage, rawExtent}  (from HPC stitch)
-# Output      : CGC_<unit>_sample_viewer.html   (per unit, patient-suffixed)
+# Output      : <prefix><unit>_sample_viewer.html   (one per unit)
 #               viewer_units.tsv                (with --dump-manifest)
 # Conda env   : <env>/bin/python  # e.g. a conda env named scvi
 # Key deps    : h5py, scipy, pandas, numpy   (NO anndata: backed read trips on
@@ -48,14 +48,17 @@ def _cohort_cfg():
     return {}
 
 _COHORT = _cohort_cfg()
+# Output filenames are "<prefix><unit>_sample_viewer.html". The prefix is
+# study-specific, so it comes from cohort_config.json ("naming": {"file_prefix"}).
+_PREFIX = ((_COHORT.get("naming") or {}).get("file_prefix") or "sample_")
 
 
 # -- DEFAULTS (all tunable paths / constants) ---------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = ("<project_root>/"
-         "reassay_CGCTumors2_2026-08-13/result/majortype_clean")
+         "<data_dir>")
 DEFAULTS = {
-    "h5ad":       f"{_ROOT}/CGC_squidpy.h5ad",                    # obs index==barcode; X=CSR log1p
+    "h5ad":       f"{_ROOT}/object.h5ad",                    # obs index==barcode; X=CSR log1p
     "labels":     f"{_ROOT}/subtype/cgc_hierarchical_labels_v6.tsv.gz",  # cell,L1,L2,L3,tumor_putative
     "fov_meta_qc": f"{os.path.dirname(_ROOT)}/fov_meta_qc.tsv",   # AUTHORITATIVE (slide,fov)->patient
     "template":   os.path.join(HERE, "sample_viewer_template.html"),  # golden shell (DATA->__DATA__)
@@ -277,7 +280,7 @@ def write_viewer(template, data, out_path):
 
 # -- main ---------------------------------------------------------------------
 def main():
-    ap = argparse.ArgumentParser(description="Build CGC per-patient spatial viewer(s).")
+    ap = argparse.ArgumentParser(description="Build per-unit spatial viewer(s).")
     ap.add_argument("patient", nargs="?", help="patient id (<unit>) or unit_id (<unit>)")
     ap.add_argument("--slide", default=None, help="restrict to one slide (TMA_1 / TMA_2)")
     ap.add_argument("--all", action="store_true", help="build every unit (loads matrix once)")
@@ -326,7 +329,7 @@ def main():
         if res is None:
             print(f"[skip] {patient}/{slide}: 0 cells"); n_skip += 1; continue
         data, info = res
-        out_path = os.path.join(args.outdir, f"CGC_{info['unit_id']}_sample_viewer.html")
+        out_path = os.path.join(args.outdir, f"{_PREFIX}{info['unit_id']}_sample_viewer.html")
         mb = write_viewer(template, data, out_path) / 1e6
         print(f"[ok] {out_path}  ({mb:.2f} MB) | cells {info['n']} fovs {info['fovs']} "
               f"genes {info['genes']} label_cov {info['label_cov']} "

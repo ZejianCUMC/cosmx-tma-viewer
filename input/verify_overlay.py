@@ -2,7 +2,7 @@
 # =============================================================================
 # Viewer alignment QC — overlay cells on the embedded morphology (viewer-exact)
 # =============================================================================
-# Self-contained: reads ONLY the built CGC_<unit>_sample_viewer.html (DATA has
+# Self-contained: reads ONLY the built <prefix><unit>_sample_viewer.html (DATA has
 # x/y, rawExtent, rawImage, per-cell Mean.PanCK), reproduces the VIEWER's exact
 # DATA.global Y-flip cell mapping, overlays cells on the (already flipud-fixed)
 # embedded mosaic, and reports a blob-proof quantitative check:

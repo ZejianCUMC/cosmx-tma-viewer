@@ -1,4 +1,4 @@
-# CGC per-patient viewer — feature checklist
+# CosMx per-unit viewer — feature checklist
 
 **Purpose.** Every time the viewer pipeline is rebuilt or a change is deployed, a reviewing agent
 MUST verify each row of this checklist against the deployed set. If any row fails, the deploy is
@@ -7,7 +7,7 @@ BLOCKED until the root cause is fixed.
 Run the mechanical check with:
 ```bash
 <env>/bin/python  # e.g. a conda env named scvi \
-  reassay_CGCTumors2_2026-08-13/result/viewer_pipeline/verify_viewer_features.py \
+  <data_dir>/result/viewer_pipeline/verify_viewer_features.py \
   <deploy_dir>
 ```
 It exits non-zero on any failure and writes a per-viewer matrix. Then eyeball 2–3 viewers with
@@ -23,7 +23,7 @@ It exits non-zero on any failure and writes a per-viewer matrix. Then eyeball 2�
 | D1 | DATA JSON parseable | `const DATA=…{…}` in HTML | brace-balanced extract → `json.loads` | template edit corrupted the block or `__DATA__` placeholder leaked in |
 | D2 | Cell count matches per-unit manifest | `viewer_units.tsv` → `n_cells` | `len(DATA.x) == manifest[unit].n_cells` | wrong (patient,slide) join in `patient_auth` (over-assign bug re-emerged) |
 | D3 | All parallel arrays same length | build_sample_viewer.py | `len(x)==len(y)==len(fov)==len(type)==len(subtype)==len(tumor)==len(genes[each])` | subset filter drifted between arrays |
-| D4 | 26 viewer files present in the deploy directory | manifest | `len(glob(CGC_*_sample_viewer.html)) == 26` | one unit failed silently in the build stage |
+| D4 | Expected viewer files present in the deploy directory | manifest | `len(glob(<prefix>*_sample_viewer.html)) == expected.units` | one unit failed silently in the build stage |
 | D5 | Patient metadata populated | `PATIENT_FIELDS` in build | `DATA.patient.Patient` non-empty; `Outcome` non-NA | patient join broken; obs field renamed upstream |
 
 ### Cell typing / labels
@@ -45,7 +45,7 @@ It exits non-zero on any failure and writes a per-viewer matrix. Then eyeball 2�
 ### RAW morphology track
 | # | Feature | Source of truth | Test | Fails when… |
 |---|---|---|---|---|
-| M1 | `rawImage` present (data URI) | build injects from `rawimg_all/rawimg_<unit>.json` | HTML contains `"rawImage":"data:image/jpeg;base64,` | `--rawimg-dir` pointed at pipeline root (where only `rawimg_CGC1.json` sits) instead of `rawimg_all/` |
+| M1 | `rawImage` present (data URI) | build injects from `rawimg_all/rawimg_<unit>.json` | HTML contains `"rawImage":"data:image/jpeg;base64,` | `--rawimg-dir` pointed at pipeline root (where only a stray `rawimg_<unit>.json` may sit) instead of `rawimg_all/` |
 | M2 | `rawImage` magic bytes valid | inline base64 | PIL open + `verify()` succeeds | truncation / corrupt regrid crop |
 | M3 | Legend "CellComposite morphology" swatch entry visible | template legend branch | HTML contains `CellComposite morphology` | template regression |
 
@@ -80,7 +80,7 @@ It exits non-zero on any failure and writes a per-viewer matrix. Then eyeball 2�
 |---|---|---|---|---|
 | P1 | Pre-deploy backup exists | `stage_deploy` in `run_all.sh` | Directory `_bak_<TS>_pre_deploy/` under the deploy directory viewer/ with 26 files | deploy was manual `cp` bypassing `run_all.sh` |
 | P2 | File sizes reasonable | expected 0.4–9 MB post-degap-regrid | all `.size > 100 KB` and `< 20 MB` | 09-08 regression: files <500KB and morphology missing OR file grew past 20 MB from unnecessary duplication |
-| P3 | Index page linked | `index_all_CGC_viewers.html` in same dir | file exists and links to all 26 | index rebuild forgotten |
+| P3 | Index page linked | the configured `naming.index_file` in the same dir | file exists and links to every unit | index rebuild forgotten |
 
 ---
 

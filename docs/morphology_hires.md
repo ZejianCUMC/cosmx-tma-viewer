@@ -1,4 +1,4 @@
-# CGC viewer — increase morphology (rawImage) resolution for a sample
+# viewer — increase morphology (rawImage) resolution for a sample
 
 Reusable recipe to sharpen the "RAW morphology — CellComposite image" layer of any
 per-patient viewer. Applied successfully to two wide wide cores **@ 0.25 µm/px**
@@ -44,13 +44,13 @@ VP=result/viewer_pipeline (local), V6=result/majortype_clean/subtype/cgc_hierarc
      scp <hpc>:$DEST/rawimg_build_hiresX/rawimg_UID.json  $VP/rawimg_hiresX/
 4. Rebuild the viewer with LOCKED v6 labels + the hi-res morphology, then postprocess:
      python build_sample_viewer.py UID --labels $V6 --rawimg-dir $VP/rawimg_hiresX --outdir $VP/viewer_testX
-     python degap_viewer.py  $VP/viewer_testX/CGC_UID_sample_viewer.html
-     python regrid_viewer.py $VP/viewer_testX/CGC_UID_sample_viewer.html --ncol 3
-     python finalize_region_polygon.py $VP/viewer_testX/CGC_UID_sample_viewer.html
+     python degap_viewer.py  $VP/viewer_testX/<prefix><UID>_sample_viewer.html
+     python regrid_viewer.py $VP/viewer_testX/<prefix><UID>_sample_viewer.html --ncol 3
+     python finalize_region_polygon.py $VP/viewer_testX/<prefix><UID>_sample_viewer.html
 5. VERIFY only morphology changed (must print ALL identical = True, rawExtent equal = True):
      python morphology_hires_method/verify_only_morphology_changed.py \
-       $VP/viewer_testX/CGC_UID_sample_viewer.html  <DBX>/CGC_UID_sample_viewer.html
-6. Deploy (the deploy directory = share/CGC/viewer/): local-backup the current the deploy directory file FIRST (NO _bak in
+       $VP/viewer_testX/<prefix><UID>_sample_viewer.html  <DBX>/<prefix><UID>_sample_viewer.html
+6. Deploy (the deploy directory = share/viewer/): local-backup the current the deploy directory file FIRST (NO _bak in
    the deploy directory), cp test → the deploy directory + local viewer/, and update the cache so future rebuilds stay hi-res:
      cp -p rawimg_hiresX/rawimg_UID.json rawimg_all/rawimg_UID.json   # backup old locally first
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Reproduce ALL CGC per-patient spatial viewers  (ZERO LLM tokens per patient)
+# Reproduce ALL per-unit spatial viewers  (ZERO LLM tokens per patient)
 # =============================================================================
 # Hybrid pipeline: cheap parts LOCAL, heavy morphology stitch on HPC sbatch.
 # The LLM built the generator ONCE; every viewer below is produced by scripts.
@@ -9,21 +9,21 @@
 #   stage ship     : LOCAL  scp scripts + manifest + units.txt -> HPC build dir
 #   stage stitch   : HPC    sbatch ARRAY (1 task/unit) -> rawimg_<unit>.json
 #   stage pull     : LOCAL  scp rawimg_*.json back down
-#   stage viewers  : LOCAL  build_sample_viewer.py --all -> CGC_<unit>_*.html
+#   stage viewers  : LOCAL  build_sample_viewer.py --all -> <prefix><unit>_*.html
 #   stage verify   : LOCAL  verify_overlay.py on every viewer (alignment QC)
 #
 # Usage:
 #   ./run_all.sh manifest ship stitch pull viewers verify     # step by step
 #   ./run_all.sh all                                          # everything
 # One (patient,slide) unit == one array task == one viewer. Multi-slide patients
-# (<unit>/5/6/9) yield CGC_<PATIENT>_<SLIDE>_sample_viewer.html per slide.
+# A unit with cores on both slides yields one viewer per slide.
 # =============================================================================
 set -euo pipefail
 
 PIPE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PYLOCAL=<env>/bin/python  # e.g. a conda env named scvi
 HPC=<hpc_login>
-DEST=<hpc_project_root>/1-project/25-CGC/reassay_CGCTumors2_2026-08-13
+DEST=<hpc_project_dir>
 BUILD=$DEST/rawimg_build
 VIEWERS="$PIPE/viewers"
 
@@ -68,12 +68,12 @@ stage_pull() {
 stage_viewers() {
   echo "== [viewers] build ALL (loads matrix once) =="
   "$PYLOCAL" "$PIPE/build_sample_viewer.py" --all --rawimg-dir "$PIPE/rawimg_all" --outdir "$VIEWERS"
-  echo "viewers: $(ls "$VIEWERS"/CGC_*_sample_viewer.html 2>/dev/null | wc -l)"
+  echo "viewers: $(ls "$VIEWERS"/<prefix>*_sample_viewer.html 2>/dev/null | wc -l)"
 }
 
 stage_verify() {
   echo "== [verify] alignment QC on every viewer =="
-  for v in "$VIEWERS"/CGC_*_sample_viewer.html; do
+  for v in "$VIEWERS"/<prefix>*_sample_viewer.html; do
     echo "--- $(basename "$v") ---"
     "$PYLOCAL" "$PIPE/verify_overlay.py" "$v" "${v%.html}_align.png" | sed -n '1,4p' || echo "  (no morphology / skip)"
   done
@@ -81,7 +81,7 @@ stage_verify() {
 
 stage_postprocess() {
   echo "== [postprocess] degap → regrid → finalize region =="
-  for v in "$VIEWERS"/CGC_*_sample_viewer.html; do
+  for v in "$VIEWERS"/<prefix>*_sample_viewer.html; do
     "$PYLOCAL" "$PIPE/degap_viewer.py"          "$v" 2>&1 | tail -1
     "$PYLOCAL" "$PIPE/regrid_viewer.py"          "$v" --ncol 3 2>&1 | tail -1
     "$PYLOCAL" "$PIPE/finalize_region_polygon.py"   "$v" 2>&1 | tail -1
@@ -93,9 +93,9 @@ stage_deploy() {
   local TS=$(date +%Y%m%d_%H%M%S)
   echo "== [deploy] backup dropbox viewers to _bak_${TS}_pre_deploy + copy new =="
   mkdir -p "$DBX/_bak_${TS}_pre_deploy"
-  cp -p "$DBX"/CGC_*_sample_viewer.html "$DBX/_bak_${TS}_pre_deploy/" 2>/dev/null || true
-  cp -p "$VIEWERS"/CGC_*_sample_viewer.html "$DBX/"
-  echo "  deployed: $(ls "$DBX"/CGC_*_sample_viewer.html | wc -l) files → $DBX"
+  cp -p "$DBX"/<prefix>*_sample_viewer.html "$DBX/_bak_${TS}_pre_deploy/" 2>/dev/null || true
+  cp -p "$VIEWERS"/<prefix>*_sample_viewer.html "$DBX/"
+  echo "  deployed: $(ls "$DBX"/<prefix>*_sample_viewer.html | wc -l) files → $DBX"
 }
 
 [[ $# -eq 0 ]] && { grep -E '^#( |=)' "$0" | sed 's/^# \{0,1\}//'; exit 0; }

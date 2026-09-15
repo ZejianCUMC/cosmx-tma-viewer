@@ -39,5 +39,11 @@
         "#5a6472"
       ]
     }
+  },
+  "naming": {
+    "_comment": "Study-specific naming. file_prefix is prepended to every viewer filename; run_prefix maps a slide label to its AtoMx run folder.",
+    "file_prefix": "sample_",
+    "index_file": "index_all_viewers.html",
+    "run_prefix": ""
   }
 }

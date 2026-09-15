@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # =============================================================================
-# CGC morphology mosaic stitcher — ONE unit  (HPC compute node)
+# CosMx morphology mosaic stitcher — ONE unit  (HPC compute node)
 # =============================================================================
 # Description : Stitch a (patient, slide) unit's per-FOV CellComposite JPGs into
 #               a global-micron mosaic, then base64-embed it as {rawImage,
 #               rawExtent} for the spatial viewer. Run as one array task per unit
 #               by stitch_morphology.sbatch (NEVER on the login node).
 # Input       : viewer_units.tsv  (unit_id, slide, fovs)  -- shipped from local
-#               flatFiles/CPS20260608_CGC_<slide>/*_fov_positions_file.csv.gz
-#               DecodedFiles/CPS20260608_CGC_<slide>/*/CellStatsDir/CellComposite/
+#               flatFiles/<run_prefix><slide>/*_fov_positions_file.csv.gz
+#               DecodedFiles/<run_prefix><slide>/*/CellStatsDir/CellComposite/
 #                            CellComposite_F<fov:05d>.jpg
 # Output      : rawimg_build/rawimg_<unit_id>.json = {rawImage, rawExtent, meta}
 # Conda env   : <hpc_project_root>/mamba/envs/GenomicTools/bin/python
@@ -35,8 +35,23 @@ import numpy as np, pandas as pd
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 
+def _cohort_cfg():
+    import json as _json
+    for _d in (os.path.dirname(os.path.abspath(__file__)),
+               os.path.dirname(os.path.dirname(os.path.abspath(__file__))), os.getcwd()):
+        _p = os.path.join(_d, "cohort_config.json")
+        if os.path.exists(_p):
+            try:
+                return _json.load(open(_p, encoding="utf-8"))
+            except Exception:
+                return {}
+    return {}
+
+# AtoMx run-folder prefix is acquisition-specific; see cohort_config.json.
+_RUN_PREFIX = ((_cohort_cfg().get("naming") or {}).get("run_prefix") or "")
+
 DEFAULTS = {
-    "dest":  "<hpc_project_root>/1-project/25-CGC/reassay_CGCTumors2_2026-08-13",
+    "dest":  "<hpc_project_dir>",
     "units": None,          # viewer_units.tsv (defaults to alongside this script)
     "out":   None,          # output dir (defaults to <dest>/rawimg_build)
     "umpx":        0.12028, # microns per global pixel
@@ -47,8 +62,9 @@ DEFAULTS = {
 
 
 def slide_run(slide):
-    """obs slide label 'TMA_1' -> AtoMx run folder 'CPS20260608_CGC_TMA_1'."""
-    return f"CPS20260608_CGC_{slide}"
+    """obs slide label 'TMA_1' -> AtoMx run folder '<run_prefix>TMA_1'.
+    The run prefix is acquisition-specific: set naming.run_prefix in cohort_config.json."""
+    return f"{_RUN_PREFIX}{slide}"
 
 
 def find_composite_dir(dest, slide):

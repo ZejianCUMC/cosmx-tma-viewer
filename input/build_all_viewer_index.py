@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the local landing page for all metadata-backed CGC viewers."""
+"""Build the local landing page for all metadata-backed viewers."""
 
 import csv
 import html
@@ -25,17 +25,19 @@ def _cohort_cfg():
     return {}
 
 _COHORT = _cohort_cfg()
+_PREFIX = ((_COHORT.get("naming") or {}).get("file_prefix") or "sample_")
+_INDEX = ((_COHORT.get("naming") or {}).get("index_file") or "index_all_viewers.html")
 
 
 HERE = Path(__file__).resolve().parent
 MANIFEST = HERE / "viewer_units.tsv"
 OUTDIR = HERE / "viewer"
-OUTPUT = OUTDIR / "index_all_CGC_viewers.html"
+OUTPUT = OUTDIR / _INDEX
 
 
 def natural_key(unit_id):
     patient = unit_id.split("_", 1)[0]
-    number = int(patient.removeprefix("CGC"))
+    number = int("".join(ch for ch in patient if ch.isdigit()) or 0)
     return number, unit_id
 
 
@@ -81,8 +83,8 @@ def main():
     with MANIFEST.open(newline="", encoding="utf-8") as handle:
         rows = sorted(csv.DictReader(handle, delimiter="\t"), key=lambda r: natural_key(r["unit_id"]))
 
-    expected = {f"CGC_{row['unit_id']}_sample_viewer.html" for row in rows}
-    present = {path.name for path in OUTDIR.glob("CGC_*_sample_viewer.html")}
+    expected = {f"{_PREFIX}{row['unit_id']}_sample_viewer.html" for row in rows}
+    present = {path.name for path in OUTDIR.glob(_PREFIX + "*_sample_viewer.html")}
     if expected != present:
         raise RuntimeError(
             f"Viewer set mismatch; missing={sorted(expected - present)}, "
@@ -98,7 +100,7 @@ def main():
         unit = html.escape(row["unit_id"])
         patient = html.escape(row["patient"])
         slide = html.escape(row["slide"])
-        filename = f"CGC_{row['unit_id']}_sample_viewer.html"
+        filename = f"{_PREFIX}{row['unit_id']}_sample_viewer.html"
         ptags, psrch = unit_pathchips(row, meta)
         tlsb = '<span class="regionbadge" title="curated important region">\u2605 Region</span>' if row["unit_id"] in BADGE_UNITS else ''
         tsr = " region" if row["unit_id"] in BADGE_UNITS else ""
@@ -116,7 +118,7 @@ def main():
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CGC sample viewers — all metadata-backed units</title>
+  <title>Sample viewers — all metadata-backed units</title>
   <style>
     :root{{--bg:#f5f7fb;--panel:#fff;--ink:#172033;--muted:#667085;--line:#dfe4ec;--accent:#3157c8;--accent2:#e9efff}}
     *{{box-sizing:border-box}} body{{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}}
@@ -136,7 +138,7 @@ def main():
   </style>
 </head>
 <body><main>
-  <h1>CGC sample viewers</h1>
+  <h1>Sample viewers</h1>
   <p class="subtitle">All metadata-backed viewer units. Select a card to open its self-contained spatial viewer.</p>
   <section class="summary">
     <div class="stat"><b>{len(rows)}</b><span>viewer units</span></div>

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CGC morphology stitch — SLURM array (one task per (patient,slide) unit)
+# CosMx morphology stitch — SLURM array (one task per (patient,slide) unit)
 # =============================================================================
 # Each array task stitches ONE unit's CellComposite FOVs into a flipud-corrected
 # global-micron mosaic and writes rawimg_<unit_id>.json to the build dir.

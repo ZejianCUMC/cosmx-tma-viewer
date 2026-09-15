@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # =============================================================================
-# CGC viewer — CORE-AWARE regrid  (replaces regrid_viewer.py's spatial guess)
+# viewer — CORE-AWARE regrid  (replaces regrid_viewer.py's spatial guess)
 # =============================================================================
 # Description : Re-arrange a sample viewer's tissue pieces into a tidy N-column
 #               grid, one tile per SUB-CORE. Grouping is NOT regrid_viewer.py's

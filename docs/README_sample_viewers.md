@@ -1,4 +1,4 @@
-# CGC per-patient spatial viewers — reproducible generator
+# CosMx per-unit spatial viewers — reproducible generator
 
 Rebuilds **all ~23 patient viewers** (each with the *RAW morphology — CellComposite image*
 backdrop) by running scripts. **Zero LLM tokens per patient** — the LLM wrote the generator
@@ -17,7 +17,7 @@ Or step by step (recommended first time, so you can eyeball the QC):
 ## What each deliverable does
 | File | Where | Role |
 |------|-------|------|
-| `build_sample_viewer.py` | LOCAL (`scvi` env) | Reads `CGC_squidpy.h5ad`, builds per-patient DATA, injects the golden template, embeds `rawimg_<unit>.json` if present → `viewers/CGC_<unit>_sample_viewer.html`. |
+| `build_sample_viewer.py` | LOCAL (`scvi` env) | Reads the cell object `.h5ad`, builds per-patient DATA, injects the golden template, embeds `rawimg_<unit>.json` if present → `viewers/<prefix><unit>_sample_viewer.html`. |
 | `stitch_one.py` | HPC compute node (`GenomicTools` env) | Stitches one unit's FOV CellComposites into a global-µm mosaic (per-FOV vertical flip + **whole-mosaic flipud fix** + downscale 2500px + JPEG q82) → `rawimg_<unit>.json` `{rawImage, rawExtent}`. |
 | `stitch_morphology.sbatch` | HPC | SLURM **array**, one task per unit (2 CPU / 8 GB / 20 min). |
 | `run_all.sh` | LOCAL | Orchestrates the full reproduction (stages above). |
@@ -28,8 +28,8 @@ Or step by step (recommended first time, so you can eyeball the QC):
 The unit is **(patient, slide)**. `build_sample_viewer.py --dump-manifest` writes `viewer_units.tsv`
 (the authoritative list: `unit_id, patient, slide, n_fovs, n_cells, fovs`) from the object's
 `patient_id`/`slide`/`fov_num`. **one unit per (patient, slide)** (a patient with cores on
-**both** TMA slides → one viewer per slide, `CGC_<PATIENT>_<SLIDE>_sample_viewer.html`; single-slide
-patients → `CGC_<PATIENT>_sample_viewer.html`). The same unique `patient_id` list also appears in
+**both** TMA slides → one viewer per slide, `<prefix><UNIT>_<SLIDE>_sample_viewer.html`; single-slide
+patients → `<prefix><UNIT>_sample_viewer.html`). The same unique `patient_id` list also appears in
 `result/fov_meta_qc.tsv`.
 
 ## Coordinate model (verified 2026-08-26)

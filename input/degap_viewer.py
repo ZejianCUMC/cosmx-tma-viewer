@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Remove large empty FOV-layout gaps from a CGC sample viewer HTML (cells + mosaic together).
+# Remove large empty FOV-layout gaps from a sample viewer HTML (cells + mosaic together).
 # Bakes the render-time y-flip into the data (global True->False) so x and y are compacted
 # in one consistent display space, then crops the matching strips out of the rawImage mosaic.
 import json, re, sys, base64, argparse

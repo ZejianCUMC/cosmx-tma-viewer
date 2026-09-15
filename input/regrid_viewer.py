@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Re-arrange TMA cores of a CGC sample viewer into a tidy N-column grid (default 3),
+# Re-arrange TMA cores of a sample viewer into a tidy N-column grid (default 3),
 # discarding the arbitrary TMA core positions. Moves each core's cells AND its mosaic
 # tile to the new grid slot. Bakes the render y-flip so cells+mosaic share one space.
 import json, re, sys, base64, argparse

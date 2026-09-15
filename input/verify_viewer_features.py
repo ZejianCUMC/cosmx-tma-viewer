@@ -2,7 +2,7 @@
 """
 verify_viewer_features.py
 =========================
-Mechanical checker for the CGC per-patient viewer feature checklist.
+Mechanical checker for the per-unit viewer feature checklist.
 Runs every row of viewer_checklist.md against every deployed viewer HTML in a
 directory and prints a pass/fail matrix. Exits non-zero on ANY failure so it can
 gate deploys in CI/agents. See viewer_checklist.md for rationale.
@@ -32,6 +32,8 @@ def _cohort_cfg():
     return {}
 
 _COHORT = _cohort_cfg()
+_PREFIX = ((_COHORT.get("naming") or {}).get("file_prefix") or "sample_")
+_INDEX = ((_COHORT.get("naming") or {}).get("index_file") or "index_all_viewers.html")
 from collections import defaultdict
 try:
     import numpy as np
@@ -71,7 +73,7 @@ def extract_data(txt):
 
 def unit_from_filename(fn):
     base = os.path.basename(fn)
-    m = re.match(r"CGC_(.+)_sample_viewer\.html$", base)
+    m = re.match(re.escape(_PREFIX) + r"(.+)_sample_viewer\.html$", base)
     return m.group(1) if m else None
 
 # ---- per-viewer feature tests ---------------------------------------------
@@ -252,7 +254,7 @@ def cohort_checks(viewer_dir, per_viewer):
     checks["P1_backup_present"] = (len(bak_dirs) >= 1,
                                     f"backup dirs found: {[os.path.basename(d) for d in bak_dirs]}")
     # P3: index page
-    idx = os.path.join(viewer_dir, "index_all_CGC_viewers.html")
+    idx = os.path.join(viewer_dir, _INDEX)
     checks["P3_index_page"] = (os.path.exists(idx),
                                 f"{'present' if os.path.exists(idx) else 'MISSING'} at {idx}")
     # important region coverage
@@ -266,14 +268,14 @@ def cohort_checks(viewer_dir, per_viewer):
 # ---- main -----------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[1])
-    ap.add_argument("viewer_dir", help="dir containing CGC_*_sample_viewer.html")
+    ap.add_argument("viewer_dir", help="dir containing <prefix>*_sample_viewer.html")
     ap.add_argument("--json", help="write machine-readable report")
     ap.add_argument("--verbose", action="store_true")
     a = ap.parse_args()
 
-    files = sorted(glob.glob(os.path.join(a.viewer_dir, "CGC_*_sample_viewer.html")))
+    files = sorted(glob.glob(os.path.join(a.viewer_dir, _PREFIX + "*_sample_viewer.html")))
     if not files:
-        print(f"[FAIL] no CGC_*_sample_viewer.html in {a.viewer_dir}")
+        print(f"[FAIL] no {_PREFIX}*_sample_viewer.html in {a.viewer_dir}")
         sys.exit(2)
 
     per_viewer = [scan_viewer(f) for f in files]

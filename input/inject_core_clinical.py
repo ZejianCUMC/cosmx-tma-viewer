@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # =============================================================================
-# CGC viewer — attach per-CORE clinical metadata to DATA.cores
+# viewer — attach per-CORE clinical metadata to DATA.cores
 # =============================================================================
 # Description : Adds core-level clinical fields (path_dx, treatment timepoint,
 #               grade, stage, block, tma_location) to every entry of DATA.cores
@@ -11,7 +11,7 @@
 #               multi-core patients: <unit> shows "post_treatment / 2F" although
 #               5 of its 6 mapped cores are pre_treatment.
 # Input       : viewer HTML (post regrid_by_core.py; DATA.cores present)
-#               CGC_patient_core_clinical.xlsx  (Core_Clinical + Patient_Summary)
+#               <core_clinical>.xlsx  (Core_Clinical + Patient_Summary)
 # Output      : same HTML rewritten in place (DATA span only)
 # Conda env   : <env>/bin/python  # e.g. a conda env named scvi
 # Key deps    : pandas, openpyxl
