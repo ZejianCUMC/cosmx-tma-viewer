@@ -119,8 +119,8 @@ function viridisR(t){return viridis(1-Math.max(0,Math.min(1,t)))}
 // patient header
 const PAT=DATA.patient||{};
 document.getElementById("patinfo").innerHTML=Object.entries(PAT).filter(([k,v])=>v&&v!=="NA"&&v!=="nan").map(([k,v])=>{if(k==="Age")v=parseFloat(v).toFixed(0)+"y";if(k==="TTR (months)")v=parseFloat(v).toFixed(1)+" mo";const warn=(k==="Progression"&&v==="Yes")||(k==="Outcome"&&/PROGRE|DECEAS/i.test(v));return`<span class="chip${warn?" warn":""}"><b>${k}</b>${v}</span>`}).join("");
-document.getElementById("finfo").textContent=`${DATA.sample||DATA.fov} · ${N.toLocaleString()} cells${DATA.fovs?" · "+DATA.fovs+" FOVs":""} · ${(DATA.meta.pathdx&&DATA.meta.pathdx[0])||"CIS"}`;
-// coords (sample = global microns, flip y so tissue is upright; CIS FOV = local px, no flip)
+document.getElementById("finfo").textContent=`${DATA.sample||DATA.fov} · ${N.toLocaleString()} cells${DATA.fovs?" · "+DATA.fovs+" FOVs":""} · ${(DATA.meta.pathdx&&DATA.meta.pathdx[0])||""}`;
+// coords (sample = global microns, flip y so tissue is upright; single-FOV = local px, no flip)
 const XS=DATA.x,YS=DATA.y.slice();
 if(DATA.global){const a=Math.min(...YS),b=Math.max(...YS);for(let i=0;i<N;i++)YS[i]=b-(YS[i]-a)}
 let minx=Math.min(...XS),maxx=Math.max(...XS),miny=Math.min(...YS),maxy=Math.max(...YS);

@@ -128,7 +128,7 @@ END_NEW = 'ctx.globalAlpha=1;drawRegion(p);drawCores(p);legend(p,f,rng)}'
 # ---- (6) header info line: cores instead of one core's path_dx ----------------
 FINFO_ANCHOR = ('document.getElementById("finfo").textContent=`${DATA.sample||DATA.fov} · '
                 '${N.toLocaleString()} cells${DATA.fovs?" · "+DATA.fovs+" FOVs":""} · '
-                '${(DATA.meta.pathdx&&DATA.meta.pathdx[0])||"CIS"}`;')
+                '${(DATA.meta.pathdx&&DATA.meta.pathdx[0])||""}`;')
 FINFO_NEW = ('document.getElementById("finfo").textContent=`${DATA.sample||DATA.fov} · '
              '${N.toLocaleString()} cells${DATA.fovs?" · "+DATA.fovs+" FOVs":""}'
              '${CORE_IDS.length?" · "+CORE_IDS.length+" cores"+(CORES.length>CORE_IDS.length?'
