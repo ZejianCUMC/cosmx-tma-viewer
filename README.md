@@ -36,7 +36,9 @@ Inside `input/`, the scripts fall into four groups:
 | Geometry post-processing | `degap_viewer.py`, `regrid_viewer.py`, `regrid_by_core.py`, `assign_subcores.py`, `finalize_region_polygon.py` |
 | Per-core annotation | `inject_core_clinical.py`, `make_template_cores.py` |
 | Morphology (HPC) | `stitch_one.py`, `stitch_one_hires_1umpx.py`, `stitch_one_hires_025umpx.py`, `stitch_morphology*.sbatch`, `verify_only_morphology_changed.py` |
-| Verification / driver | `verify_viewer_features.py`, `verify_overlay.py`, `build_all_viewer_index.py`, `run_all.sh` |
+| Verification / driver | `verify_viewer_features.py`, `verify_cohort.py`, `verify_overlay.py`, `run_all.sh` |
+| Landing page | `extract_core_summary.py`, `build_all_viewer_index.py` |
+| Sharing | `splice.py`, `deidentify_viewer.py` |
 
 ## How a viewer is built
 
@@ -62,6 +64,47 @@ the `const DATA={...}` span, never the HTML/CSS/JS shell, so the shell stays
 byte-identical to `input/sample_viewer_template.html`. That contract is what
 lets a UI change be applied to already-built viewers by swapping the shell
 instead of rebuilding from the expression matrix.
+
+## Landing page
+
+`build_all_viewer_index.py` writes a searchable card per viewer. Each card shows,
+**per patient**: the number of cores (with the sub-core count when a core covers
+more than one piece of tissue), the pre- and post-treatment core counts, and TTR
+in months, alongside the cell count for that viewer.
+
+Those figures are read back **out of the built viewers** by
+`extract_core_summary.py` into `viewer_core_summary.tsv`, rather than recomputed
+from the source tables, so the page cannot drift from what the viewers display.
+A core belongs to exactly one slide, so rolling per-viewer rows up to the patient
+double-counts nothing; where a patient has cores on several slides the card adds
+a "N on this slide" note so it does not overstate what it opens.
+
+```bash
+python input/extract_core_summary.py <viewer_dir> --out viewer_core_summary.tsv
+python input/build_all_viewer_index.py --viewer-dir <viewer_dir> \
+       --summary viewer_core_summary.tsv --manifest <viewer_units.tsv> \
+       --fov-meta <fov_meta_qc.tsv> --out <viewer_dir>/index.html
+```
+
+Without the summary file the cards simply omit those chips.
+
+## Sharing a viewer
+
+`deidentify_viewer.py` masks every clinical and patient attribute in a built
+viewer — the patient chips, the per-core pathology / stage / grade / block, and
+the per-cell pathology annotation — leaving the field labels in place so the
+interface still reads correctly. Structural fields (coordinates, FOV numbers,
+cell-type labels, core geometry) are kept so the result still demonstrates what
+the tool does.
+
+```bash
+python input/deidentify_viewer.py <built.html> example_output.html
+```
+
+It does **not** strip the expression matrix, the cell coordinates or the embedded
+tissue morphology image. Those carry no clinical labels afterwards but remain
+sample-derived measurements; decide separately whether that is acceptable for
+your audience.
 
 ## Cohort configuration
 
