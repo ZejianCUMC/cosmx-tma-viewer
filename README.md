@@ -1,4 +1,7 @@
-# CosMx sample viewer
+# cosmx-tma-viewer
+
+**Self-contained HTML viewers for CosMx TMA experiments — one file per patient,
+no server, no install.**
 
 Scripts that turn a CosMx spatial-transcriptomics AnnData object into a
 self-contained, offline HTML viewer — one file per (patient, slide) unit, with
