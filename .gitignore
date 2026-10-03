@@ -11,12 +11,16 @@
 # Built viewers and landing pages (contain patient clinical metadata)
 *.html
 !input/sample_viewer_template.html
+!input/viewer_template.html
+!legacy/sample_viewer_template.html
 !**/sample_viewer_template*.html
 
 # Cohort-specific values (unit ids, per-unit pathology labels, cohort counts).
 # Study data, not code. Only the placeholder example is tracked.
 cohort_config.json
 !cohort_config.example.json
+!cohort_config.example.v1.json
+!demo_config.json
 
 # Embedded morphology mosaics handed to the builder
 rawimg_*.json
@@ -43,6 +47,8 @@ units.txt
 *.jpeg
 *.pdf
 *.svg
+# synthetic demo screenshots only
+!docs/img/demo_*.png
 
 # Run artifacts
 *.log
@@ -60,3 +66,6 @@ __pycache__/
 .env
 .venv/
 .DS_Store
+
+# Synthetic demo outputs (regenerate with run_demo.sh)
+demo/

@@ -1,0 +1,333 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{--bg:#0f1216;--panel:#161b22;--edge:#2a313c;--fg:#e6edf3;--mut:#9aa4b2;--accent:#4da3ff;--chip:#1d2530}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+#app{display:flex;flex-direction:column;height:100vh}
+header{padding:8px 14px;border-bottom:1px solid var(--edge);display:flex;flex-direction:column;gap:6px}
+.hrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:15px;margin:0;font-weight:600}
+.sub{color:var(--mut);font-size:12px}
+.gc{display:flex;align-items:center;gap:6px;color:var(--mut)}
+.gc input[type=range]{width:96px}
+button{background:var(--panel);color:var(--fg);border:1px solid var(--edge);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px}
+button:hover{border-color:var(--accent)}
+.patrow{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:var(--chip);border:1px solid var(--edge);border-radius:5px;padding:2px 7px;font-size:11px;white-space:nowrap}
+.chip b{color:var(--accent);font-weight:600;margin-right:3px}
+.chip.warn b{color:#ff8a5b}
+.panels{flex:1;display:flex;gap:1px;background:var(--edge);min-height:0}
+.panel{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0;position:relative}
+.pbar{padding:6px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--edge);background:var(--panel)}
+.pbar .cat{color:var(--mut);font-size:11px;white-space:nowrap}
+.combo{position:relative;flex:1;max-width:320px}
+.combo-input{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--edge);border-radius:6px;padding:6px 9px;font-size:12px;cursor:pointer;text-align:left}
+.combo-input:hover{border-color:var(--accent)}
+.combo-pop{position:absolute;z-index:20;top:calc(100% + 3px);left:0;right:0;background:var(--panel);border:1px solid var(--accent);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden}
+.combo-search{width:100%;background:var(--bg);color:var(--fg);border:none;border-bottom:1px solid var(--edge);padding:8px 10px;font-size:12px;outline:none}
+.combo-list{max-height:320px;overflow:auto}
+.combo-item{padding:6px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid rgba(128,128,128,.08)}
+.combo-item:hover{background:var(--accent);color:#fff}
+.combo-item.sel{color:var(--accent);font-weight:600}
+.combo-item.hdr{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.05em;cursor:default;background:transparent;padding:6px 10px 2px}
+.combo-item.hdr:hover{background:transparent;color:var(--mut)}
+.pbody{flex:1;display:flex;min-height:0}
+.cvwrap{flex:1;position:relative;min-height:0}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.legend{width:214px;flex:none;overflow:auto;background:var(--panel);border-left:1px solid var(--edge);padding:12px;color:var(--fg)}
+.legend .lt{font-weight:600;margin-bottom:5px;font-size:12px}
+.legend .li{display:flex;align-items:center;gap:7px;margin:3px 0;font-size:11.5px;color:var(--fg)}
+.legend .sw{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(128,128,128,.35);cursor:pointer}
+.legend .sw:hover{outline:2px solid var(--accent);outline-offset:1px}
+.legend .cnt{color:var(--mut);font-size:10.5px}
+.legend .li[data-cat]{cursor:pointer;border-radius:4px;padding:1px 3px;user-select:none}
+.legend .li[data-cat]:hover{background:var(--chip)}
+.legend .li.hid{opacity:.34;text-decoration:line-through}
+.legend .li.hi{outline:2px solid var(--accent);outline-offset:-2px;font-weight:600}
+.legend .lt[data-reset]{cursor:pointer}
+.legend .lhint{color:var(--mut);font-size:9.5px;margin:2px 0 6px;font-style:italic}
+.l2h{display:flex;align-items:center;gap:7px;margin:8px 0 2px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;border-radius:4px;padding:1px 3px;color:var(--fg)}.l2h:hover{background:var(--chip)}.l2h.hid{opacity:.34;text-decoration:line-through}.l2h.part .cnt::after{content:" · some hidden"}.l2h .sw2{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(128,128,128,.35)}.li.l3{margin-left:15px}
+
+.cbar{width:154px;height:12px;border-radius:3px;margin:5px 0;border:1px solid var(--edge)}
+.cbnums{display:flex;justify-content:space-between;color:var(--mut);font-size:10px}
+.note{color:var(--mut);font-size:10.5px;margin-top:3px}
+.corerow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.crhdr{color:var(--mut);font-size:11px}
+.ctag{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--edge);border-left:4px solid var(--cc,var(--mut));border-radius:6px;padding:3px 8px;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}
+.ctag:hover{border-color:var(--accent);border-left-color:var(--cc,var(--mut))}
+.ctag b{color:var(--cc,var(--fg));font-weight:700}
+.ctag .cclin{color:var(--fg)}
+.ctag .cnt{color:var(--mut);font-size:10px}
+.ctag.off{opacity:.42}
+.ctag.off .cclin{text-decoration:line-through}
+.ctag.na{opacity:.55;cursor:default;font-style:italic}
+.ctag input{margin:0;cursor:pointer}
+.crlegend{display:inline-flex;align-items:center;gap:5px;color:var(--mut);font-size:10.5px}
+.crlegend i{width:15px;border-top:3px solid;display:inline-block;vertical-align:middle}
+.crbtn{font-size:10.5px;padding:2px 7px}
+.tt{position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:6px 9px;font-size:11px;z-index:30;display:none;max-width:240px;box-shadow:0 3px 12px rgba(0,0,0,.4)}
+.tt b{color:var(--accent)}
+@media (prefers-color-scheme:light){:root{--bg:#f6f8fa;--panel:#fff;--edge:#d0d7de;--fg:#1f2328;--mut:#57606a;--chip:#eef1f4}}
+:root[data-theme=dark]{--bg:#0f1216;--panel:#161b22;--edge:#2a313c;--fg:#e6edf3;--mut:#9aa4b2;--chip:#1d2530}
+:root[data-theme=light]{--bg:#f6f8fa;--panel:#fff;--edge:#d0d7de;--fg:#1f2328;--mut:#57606a;--chip:#eef1f4}
+</style><style>#he-panel{flex:0 0 45%;min-width:280px;display:flex;flex-direction:column;background:var(--panel);border-left:2px solid var(--accent);min-height:0}
+#he-panel header{padding:8px 10px;gap:7px;max-height:44%;overflow:auto}
+#he-panel h2{margin:0;font-size:15px}#he-panel select{max-width:100%;background:var(--bg);color:var(--fg);padding:6px;border:1px solid var(--edge);border-radius:5px;width:100%}
+#he-panel .he-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}#he-note{padding:7px;background:#553811;color:#ffe2ae;border-radius:5px;white-space:pre-wrap}#he-details{font-size:11px;color:var(--mut)}
+#he-stage{flex:1;min-height:160px;overflow:hidden;position:relative;background:#ddd;touch-action:none;cursor:grab}#he-stage img{position:absolute;left:50%;top:50%;width:auto;height:auto;max-width:none;max-height:none;transform-origin:center;user-select:none;pointer-events:none}#he-stage:active{cursor:grabbing}
+#he-panel footer{padding:8px;font-size:11px;color:var(--mut)}#he-panel textarea{width:100%;height:42px;resize:vertical;background:var(--bg);color:var(--fg);border:1px solid var(--edge)}
+.he-single .panels>.panel:nth-child(2){display:none}#he-toggle{margin-left:auto}#he-panel[hidden]{display:none}.he-controls-label{font-size:11px;color:var(--mut)}
+@media(max-width:850px){body.he-open #app{height:auto;min-height:100vh}body.he-open .panels{flex-wrap:wrap;overflow:visible}body.he-open .panels>.panel{flex:1 1 100%;height:65vh}body.he-open #he-panel{flex:1 1 100%;height:85vh}#he-panel header{max-height:50%}body.he-open .legend{width:140px}}
+</style></head>
+<body><div id="app">
+<header>
+ <div class="hrow">
+  <h1>__TITLE__</h1><span class="sub" id="finfo">—</span>
+  <span class="gc">size <input type="range" id="psz" min="1" max="9" step="0.5" value="3.5"></span>
+  <span class="gc">opacity <input type="range" id="pop" min="0.2" max="1" step="0.05" value="0.9"></span>
+  <span class="gc" id="gmaxwrap" style="display:none">gene max <input type="range" id="gmax" min="5" max="100" step="1" value="100"><span id="gmaxlbl" style="font-size:10px;color:var(--mut)">100%</span></span>
+  <span class="gc"><label style="cursor:pointer;user-select:none"><input type="checkbox" id="tlschk" style="vertical-align:middle"> __REGION_TOGGLE__</label></span>
+  <span class="gc"><label style="cursor:pointer;user-select:none"><input type="checkbox" id="framechk" checked style="vertical-align:middle"> Core frames</label></span>
+  <button id="reset">Reset view</button>
+  <span class="sub">wheel=zoom · drag=pan · synced · hover=cell</span>
+ </div>
+ <div class="patrow" id="patinfo"></div>
+ <div class="corerow" id="coreinfo"></div>
+</header>
+<div class="panels">
+ <div class="panel"><div class="pbar"><span class="cat">Left</span>
+   <div class="combo"><button class="combo-input" id="ci0"></button><div class="combo-pop" id="cp0" hidden><input class="combo-search" id="cs0" placeholder="search cell type / gene / channel…"><div class="combo-list" id="cl0"></div></div></div></div>
+  <div class="pbody"><div class="cvwrap"><canvas id="c0"></canvas></div><div class="legend" id="lg0"></div></div></div>
+ <div class="panel"><div class="pbar"><span class="cat">Right</span>
+   <div class="combo"><button class="combo-input" id="ci1"></button><div class="combo-pop" id="cp1" hidden><input class="combo-search" id="cs1" placeholder="search cell type / gene / channel…"><div class="combo-list" id="cl1"></div></div></div></div>
+  <div class="pbody"><div class="cvwrap"><canvas id="c1"></canvas></div><div class="legend" id="lg1"></div></div></div>
+</div>
+<div class="tt" id="tt"></div>
+</div>
+<script>
+const DATA=/*__DATA__*/; const CFG=/*__CONFIG__*/; const N=DATA.n;
+const HIDDEN_DEFAULT=new Set(CFG.hiddenDefault||[]);function hiddenState(){return new Map([...HIDDEN_DEFAULT].map(v=>[v,2]))}
+const LEVELS=CFG.levelLabels||["Cell type · L1","Cell type · L2","Cell type · L3"];const STORE=CFG.storagePrefix||"tmaviewer";
+const MAJORPAL=CFG.palette||{};
+const PAL20=["#4363d8","#3cb44b","#f58231","#911eb4","#42d4f4","#f032e6","#bfef45","#fabed4","#469990","#dcbeff","#9A6324","#800000","#aaffc3","#808000","#ffd8b1","#000075","#e6194B","#a9a9a9","#ffe119","#00d0b0"];
+function buildPal(vals){const u=[...new Set(vals)].sort();const m={};let i=0;u.forEach(v=>{if(MAJORPAL[v])m[v]=MAJORPAL[v];else if(HIDDEN_DEFAULT.has(v))m[v]="#d9d9d9";else{m[v]=PAL20[i%20];i++}});return m}
+const CATS={"__type__":{label:LEVELS[0],vals:DATA.type},"__subtype__":{label:LEVELS[2],vals:DATA.subtype},"__subL2__":{label:LEVELS[1],vals:DATA.subL2}};
+Object.values(CATS).forEach(c=>c.pal=buildPal(c.vals));
+// --- editable palette: click a legend swatch to recolor a cell type (persisted) ---
+const PAL_LS_KEY=STORE+"_pal_overrides_v1";let PAL_OVERRIDE={};try{PAL_OVERRIDE=JSON.parse(localStorage.getItem(PAL_LS_KEY)||"{}")||{}}catch(e){PAL_OVERRIDE={}}
+Object.keys(CATS).forEach(k=>{const o=PAL_OVERRIDE[k];if(o)Object.keys(o).forEach(v=>{CATS[k].pal[v]=o[v]})});
+const _colorInput=document.createElement("input");_colorInput.type="color";_colorInput.style.cssText="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0";document.body.appendChild(_colorInput);
+let _colorTarget=null;
+function _toHex(c){if(!c)return"#888888";if(c[0]==="#"){return c.length===4?("#"+c[1]+c[1]+c[2]+c[2]+c[3]+c[3]):c.slice(0,7)}const m=c.match(/\d+/g);return(m&&m.length>=3)?("#"+m.slice(0,3).map(x=>(+x).toString(16).padStart(2,"0")).join("")):"#888888"}
+_colorInput.addEventListener("input",()=>{if(!_colorTarget)return;const t=_colorTarget;CATS[t.catKey].pal[t.val]=_colorInput.value;(PAL_OVERRIDE[t.catKey]=PAL_OVERRIDE[t.catKey]||{})[t.val]=_colorInput.value;try{localStorage.setItem(PAL_LS_KEY,JSON.stringify(PAL_OVERRIDE))}catch(e){}panels.forEach(pp=>{if((FEATS.find(x=>x.k===pp.feat)||{}).k===t.catKey)drawP(pp)})});
+
+const VIR=[[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[110,206,88],[181,222,43],[253,231,37]];
+function viridis(t){t=Math.max(0,Math.min(1,t));const x=t*9,i=Math.floor(x),f=x-i,a=VIR[i],b=VIR[Math.min(9,i+1)];return`rgb(${a[0]+(b[0]-a[0])*f|0},${a[1]+(b[1]-a[1])*f|0},${a[2]+(b[2]-a[2])*f|0})`}
+const RNG={};function range(arr){const s=arr.filter(v=>v>0).slice().sort((a,b)=>a-b);if(!s.length)return[0,1];const lo=s[Math.floor(s.length*0.02)],hi=s[Math.floor(s.length*0.98)]||s[s.length-1];return[lo,hi>lo?hi:lo+1]}
+// channel ranges for RGB modes
+const CHN={};["PanCK","CD45","DAPI","Membrane","G"].forEach(c=>{if(DATA.channels[c])CHN[c]=range(DATA.channels[c])});
+function nrm(v,r){return Math.max(0,Math.min(1,(v-r[0])/(r[1]-r[0])))}
+function rgbRaw(i){const r=nrm(DATA.channels.PanCK[i],CHN.PanCK),g=nrm(DATA.channels.CD45[i],CHN.CD45),b=nrm(DATA.channels.DAPI[i],CHN.DAPI);return`rgb(${r*255|0},${g*255|0},${b*255|0})`}
+function rgbPath(i){const h=nrm(DATA.channels.DAPI[i],CHN.DAPI),e=nrm(DATA.channels.PanCK[i],CHN.PanCK);const R=255*(1-0.55*h-0.05*e),G=255*(1-0.72*h-0.55*e),B=255*(1-0.20*h-0.28*e);return`rgb(${Math.max(0,R)|0},${Math.max(0,G)|0},${Math.max(0,B)|0})`}
+// feature registry
+const FEATS=[{k:"__he__",label:"H&E",kind:"he",grp:"Morphology image"},{k:"__type__",kind:"cat",grp:"Cell types"},{k:"__subL2__",kind:"cat",grp:"Cell types"},{k:"__subtype__",kind:"cat",grp:"Cell types"}];
+if(DATA.rawImage) FEATS.push({k:"__rawimg__",label:"RAW morphology — CellComposite image",kind:"rawimg",grp:"Morphology image"});
+if(!Object.keys(DATA.heImages||{}).length)FEATS.splice(FEATS.findIndex(f=>f.k==="__he__"),1);
+FEATS.push({k:"__rgbpath__",label:"Virtual H&E-like colors (computed, not histology)",kind:"rgbpath",grp:"Composite RGB"});
+FEATS.filter(f=>CATS[f.k]).forEach(f=>f.label=CATS[f.k].label);
+Object.keys(DATA.channels).forEach(c=>FEATS.push({k:"ch:"+c,label:"Channel · "+c,kind:"num",arr:DATA.channels[c],grp:"IF channels"}));
+// --- ALL-gene sparse store (base64 UInt8 codes, per-gene max) ---
+function _b64b(x){const bin=atob(x),n=bin.length,b=new Uint8Array(n);for(let i=0;i<n;i++)b[i]=bin.charCodeAt(i);return b}
+let GS=null,GMAX=null,GNAMES=null,GLIM=1.0;
+if(DATA.geneSparse){const g=DATA.geneSparse;GS={indptr:new Int32Array(_b64b(g.indptr).buffer),idx:new Uint16Array(_b64b(g.indices).buffer),val:_b64b(g.data)};GMAX=g.geneMax;GNAMES=g.names;GNAMES.forEach((nm,gi)=>FEATS.push({k:"g:"+nm,label:"Gene · "+nm,kind:"gene",gi:gi,grp:"Genes ("+GNAMES.length+")"}));}
+else if(DATA.genes){Object.keys(DATA.genes).forEach(g=>FEATS.push({k:"g:"+g,label:"Gene · "+g,kind:"num",arr:DATA.genes[g],grp:"Genes ("+Object.keys(DATA.genes).length+")"}));}
+const _geneCache={};
+function geneCodes(gi){if(_geneCache[gi])return _geneCache[gi];const out=new Float32Array(N),ip=GS.indptr,ix=GS.idx,vl=GS.val;for(let r=0;r<N;r++){for(let k=ip[r];k<ip[r+1];k++){if(ix[k]===gi){out[r]=vl[k]*(DATA.geneMaxBySource[DATA.geneSource[r]][gi]/(GMAX[gi]||1));break}}}_geneCache[gi]=out;return out}
+function viridisR(t){return viridis(1-Math.max(0,Math.min(1,t)))}
+// --- TMA core frames + per-core clinical annotation ---------------------------
+// One physical tissue piece = one frame. Sub-cores of the same punch SHARE the
+// core_id, so they share one label, one clinical record, one header tag and one
+// show/hide checkbox (e.g. one punch that lies on the slide as two separate pieces).
+const CORES=DATA.cores||[];
+const CORE_GROUPS=CFG.coreGroups||{};
+const coreCol=c=>(CORE_GROUPS[c.group]||{}).color||"#9aa4b2";
+const CORE_IDS=[...new Set(CORES.map(c=>c.id))];
+const shownCore={};CORE_IDS.forEach(id=>shownCore[id]=true);
+let showFrames=true;
+const COREIDX=new Int16Array(N);
+(function(){const mp=DATA.coreFov||{};for(let i=0;i<N;i++){const v=mp[DATA.fov[i]];COREIDX[i]=(v===undefined?-1:v)}})();
+const coreHidden=i=>{const c=COREIDX[i];return c>=0&&!shownCore[CORES[c].id]};
+function coreAgg(id){const ss=CORES.filter(c=>c.id===id);return{c:ss[0],n:ss.reduce((a,b)=>a+b.n,0),nfov:ss.reduce((a,b)=>a+b.nfov,0),parts:ss.length}}
+function coreTip(c){const g=coreAgg(c.id);const pc=c.nparts>1?` <span style="color:var(--mut)">piece ${c.part} of ${c.nparts}</span>`:"";
+ return `<b style="color:${coreCol(c)}">${c.id}</b>${pc}${(c.lines||[]).map(l=>"<br>"+l).join("")}<br><span style="color:var(--mut)">${c.n.toLocaleString()} cells · ${c.nfov} FOVs${c.nparts>1?` · core total ${g.n.toLocaleString()}`:""}</span>`}
+function maskHiddenCores(p,bg){if(!CORES.length)return;const ctx=p.ctx;ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=bg;CORES.forEach(c=>{if(shownCore[c.id])return;const s=c.slot;ctx.fillRect(SX(s[0]),SY(s[1]),(s[2]-s[0])*view.s,(s[3]-s[1])*view.s)});ctx.restore()}
+function drawCores(p){p.labelRects=[];if(!CORES.length||!showFrames)return;const ctx=p.ctx;ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);
+ const grow=PSZ+2;ctx.font='bold 12px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';ctx.textBaseline="middle";ctx.textAlign="center";
+ CORES.forEach((c,ci)=>{if(!shownCore[c.id])return;const col=coreCol(c);
+  const X0=SX(c.box[0])-grow,Y0=SY(c.box[1])-grow,X1=SX(c.box[2])+grow,Y1=SY(c.box[3])+grow;
+  if(X1<-60||X0>p.W+60||Y1<-60||Y0>p.H+60)return;
+  const tw=ctx.measureText(c.nparts>1?c.id+" · piece "+c.part:c.id).width,half=tw/2+7;
+  let lx=(X0+X1)/2;const loA=Math.max(X0,0)+half+2,hiA=Math.min(X1,p.W)-half-2;
+  if(hiA>loA)lx=Math.min(Math.max(lx,loA),hiA);
+  const ly=Math.min(Math.max(Y0,15),p.H-7),clamped=Math.abs(ly-Y0)>0.5;
+  ctx.strokeStyle=col;ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();                                  // 3 full sides + broken top
+  ctx.moveTo(X0,Y0);ctx.lineTo(X0,Y1);ctx.lineTo(X1,Y1);ctx.lineTo(X1,Y0);
+  if(clamped){ctx.lineTo(X0,Y0)}else{ctx.lineTo(lx+half,Y0);ctx.moveTo(lx-half,Y0);ctx.lineTo(X0,Y0)}
+  ctx.stroke();
+  const bw=tw+12,bh=15;                             // label pill (legible over morphology)
+  ctx.fillStyle=getComputedStyle(document.body).backgroundColor||"#0f1216";
+  ctx.fillRect(lx-bw/2,ly-bh/2,bw,bh);
+  if(clamped){ctx.strokeStyle=col;ctx.lineWidth=1;ctx.strokeRect(lx-bw/2,ly-bh/2,bw,bh)}
+  ctx.fillStyle=col;ctx.fillText(c.nparts>1?c.id+" · piece "+c.part:c.id,lx,ly+0.5);
+  p.labelRects.push({x0:lx-bw/2,y0:ly-bh/2,x1:lx+bw/2,y1:ly+bh/2,ci:ci})});
+ ctx.restore()}
+function coreLabelAt(p,mx,my){const L=p.labelRects||[];for(let i=L.length-1;i>=0;i--){const r=L[i];if(mx>=r.x0&&mx<=r.x1&&my>=r.y0&&my<=r.y1)return r.ci}return -1}
+function renderCoreTags(){const box=document.getElementById("coreinfo");if(!box)return;
+ if(!CORES.length){box.style.display="none";return}
+ const legend=Object.keys(CORE_GROUPS).length?`<span class="crlegend">${Object.values(CORE_GROUPS).map((g,i)=>`<i style="border-color:${g.color}${i?";margin-left:6px":""}"></i>${g.label}`).join("")}</span>`:"";
+ const tags=CORE_IDS.map((id,k)=>{const g=coreAgg(id),c=g.c,on=shownCore[id];
+  const pc=g.parts>1?` · ${g.parts} pieces`:"";
+  return `<label class="ctag${on?"":" off"}" style="--cc:${coreCol(c)}" title="${id}${c.short?" — "+c.short:""}${pc}"><input type="checkbox" data-ck="${k}"${on?" checked":""}><b>${id}</b>${c.short?`<span class="cclin">(${c.short})</span>`:""}<span class="cnt">${g.n.toLocaleString()} cells · ${g.nfov} FOVs${pc}</span></label>`}).join("");
+ box.innerHTML=`<span class="crhdr">Cores (${CORE_IDS.length})</span>${tags}<button class="crbtn" id="corall">All</button><button class="crbtn" id="cornone">None</button>${legend}`;
+ box.querySelectorAll("input[data-ck]").forEach(inp=>inp.onchange=()=>{shownCore[CORE_IDS[+inp.dataset.ck]]=inp.checked;renderCoreTags();drawAll()});
+ const all=document.getElementById("corall"),non=document.getElementById("cornone");
+ if(all)all.onclick=()=>{CORE_IDS.forEach(id=>shownCore[id]=true);renderCoreTags();drawAll()};
+ if(non)non.onclick=()=>{CORE_IDS.forEach(id=>shownCore[id]=false);renderCoreTags();drawAll()}}
+// patient header
+const PAT=DATA.patient||{};
+const _nc=n=>`${n} core${n>1?"s":""}`;
+function coreSummary(){const u=CORE_IDS.map(id=>CORES.find(c=>c.id===id));
+ const agg=(fn,order)=>{const m={};u.forEach(c=>{const v=fn(c);if(v)m[v]=(m[v]||0)+1});
+  const ks=Object.keys(m).sort((a,b)=>(order?order.indexOf(a)-order.indexOf(b):0)||m[b]-m[a]||a.localeCompare(b));
+  return ks.map(k=>`${k}(${_nc(m[k])})`).join(", ")};
+ return (CFG.coreSummaryFields||[]).map(s=>[s.label,agg(c=>(c.fields||{})[s.field])]).concat(Object.keys(CORE_GROUPS).length&&CFG.coreGroupTitle?[[CFG.coreGroupTitle,agg(c=>(CORE_GROUPS[c.group]||{}).short||"",Object.values(CORE_GROUPS).map(g=>g.short))]]:[])}
+function renderPatChips(){const chip=(k,v,w)=>`<span class="chip${w?" warn":""}"><b>${k}</b>${v}</span>`;const out=[];let done=false;const W=CFG.patientWarn||{};
+ const sum=()=>{done=true;coreSummary().forEach(([k,v])=>{if(v)out.push(chip(k,v))})};
+ Object.entries(PAT).filter(([k,v])=>v!==null&&v!==""&&v!=="NA").forEach(([k,v])=>{out.push(chip(k,v,W[k]&&new RegExp(W[k],"i").test(String(v))));if(k===CFG.patientSummaryAfter)sum()});
+ if(!done)sum();document.getElementById("patinfo").innerHTML=out.join("")}
+renderPatChips();
+document.getElementById("finfo").textContent=`${DATA.sample||DATA.fov} · ${N.toLocaleString()} cells${DATA.fovs?" · "+DATA.fovs+" FOVs":""}${CORE_IDS.length?" · "+CORE_IDS.length+" cores"+(CORES.length>CORE_IDS.length?" ("+CORES.length+" pieces)":""):""}`;renderCoreTags();
+// coords (sample = global microns, flip y so tissue is upright; single FOV = local px, no flip)
+const XS=DATA.x,YS=DATA.y.slice();
+if(DATA.global){const a=Math.min(...YS),b=Math.max(...YS);for(let i=0;i<N;i++)YS[i]=b-(YS[i]-a)}
+let minx=DATA.rawExtent[0],maxx=DATA.rawExtent[2],miny=DATA.rawExtent[1],maxy=DATA.rawExtent[3];for(let i=0;i<N;i++){if(XS[i]<minx)minx=XS[i];if(XS[i]>maxx)maxx=XS[i];if(YS[i]<miny)miny=YS[i];if(YS[i]>maxy)maxy=YS[i]}
+const W0=maxx-minx||1,H0=maxy-miny||1;
+let view={s:1,tx:0,ty:0},fitted=false,PSZ=3.5,POP=0.9,DPR=Math.max(1,window.devicePixelRatio||1);
+const _fk=k=>FEATS.some(f=>f.k===k)?k:"__type__";const panels=[{id:0,feat:_fk(CFG.leftDefault||"__rawimg__")},{id:1,feat:_fk(CFG.rightDefault||"__he__")}];
+panels.forEach(p=>{p.cv=document.getElementById("c"+p.id);p.ctx=p.cv.getContext("2d");p.lg=document.getElementById("lg"+p.id);
+ p.input=document.getElementById("ci"+p.id);p.pop=document.getElementById("cp"+p.id);p.search=document.getElementById("cs"+p.id);p.list=document.getElementById("cl"+p.id);
+ p.state=hiddenState();
+ p.lg.addEventListener("click",e=>{const f=FEATS.find(x=>x.k===p.feat);if(!f||f.kind!=="cat")return;const _swli=(e.target.classList&&e.target.classList.contains("sw"))?e.target.closest(".li[data-cat]"):null;if(_swli){e.stopPropagation();_colorTarget={p,catKey:p.feat,val:_swli.dataset.cat};_colorInput.value=_toHex(CATS[p.feat].pal[_swli.dataset.cat]);_colorInput.click();return}if(e.target.closest(".lt")){p.state=hiddenState();drawP(p);return}const _h2=e.target.closest(".l2h[data-l2]");if(_h2){const g=_h2.dataset.l2,k=L3U.filter(v=>(L3TO2[v]||v)===g),all=k.every(v=>(p.state.get(v)||0)===2);k.forEach(v=>{if(all)p.state.delete(v);else p.state.set(v,2)});drawP(p);return}const li=e.target.closest(".li[data-cat]");if(!li)return;const c=li.dataset.cat,s=(p.state.get(c)||0)+1;if(s>=3)p.state.delete(c);else p.state.set(c,s);drawP(p)});
+ p.input.textContent=FEATS.find(f=>f.k===p.feat).label;
+ p.input.onclick=e=>{e.stopPropagation();const open=!p.pop.hidden;closeAll();if(!open){p.pop.hidden=false;p.search.value="";renderList(p,"");p.search.focus()}};
+ p.search.oninput=()=>renderList(p,p.search.value);p.search.onclick=e=>e.stopPropagation();});
+function closeAll(){panels.forEach(p=>p.pop.hidden=true)}
+document.addEventListener("click",closeAll);
+function renderList(p,q){q=q.toLowerCase();p.list.innerHTML="";let lastGrp="";FEATS.filter(f=>f.label.toLowerCase().includes(q)).forEach(f=>{
+ if(f.grp&&f.grp!==lastGrp){lastGrp=f.grp;const h=document.createElement("div");h.className="combo-item hdr";h.textContent=f.grp;p.list.appendChild(h)}
+ const it=document.createElement("div");it.className="combo-item"+(f.k===p.feat?" sel":"");it.textContent=f.label;it.onclick=e=>{e.stopPropagation();p.feat=f.k;p.input.textContent=f.label;p.pop.hidden=true;p.state=hiddenState();drawP(p)};p.list.appendChild(it)})}
+function resize(){panels.forEach(p=>{const r=p.cv.parentElement.getBoundingClientRect();p.cv.width=r.width*DPR;p.cv.height=r.height*DPR;p.W=r.width;p.H=r.height});if(!fitted){fit();fitted=true}drawAll()}
+function fit(){const p=panels[0],pad=22,sx=(p.W-2*pad)/W0,sy=(p.H-2*pad)/H0;view.s=Math.min(sx,sy);view.tx=(p.W-W0*view.s)/2-minx*view.s;view.ty=(p.H-H0*view.s)/2-miny*view.s}
+const SX=x=>x*view.s+view.tx,SY=y=>y*view.s+view.ty;
+function _updGmaxUI(){const any=panels.some(p=>{const f=FEATS.find(x=>x.k===p.feat);return f&&f.kind==="gene"});const w=document.getElementById("gmaxwrap");if(w)w.style.display=any?"":"none"}
+function drawAll(){panels.forEach(drawP);_updGmaxUI()}
+// H&E is an image feature in the original synchronized two-panel viewer.
+// H&E display orientation is adjustable per core; RAW and cell coordinates stay native.
+const SAMPLE_HE_STORE=STORE+'_he_orientation';
+let sampleHEPose={};try{sampleHEPose=JSON.parse(localStorage.getItem(SAMPLE_HE_STORE)||'{}')}catch(e){}
+if(!sampleHEPose||typeof sampleHEPose!=='object'||Array.isArray(sampleHEPose))sampleHEPose={};
+
+
+function defaultHEPose(c){const d=Object.assign({angle:0,flip:1,fy:1},CFG.heDefaultPose||{});for(const r of (CFG.hePoseRules||[]))if(c.startsWith(r.prefix))return Object.assign({},d,r.pose);return d}
+function samplePose(c){const p=sampleHEPose[c];return p&&[0,90,180,270].includes(p.angle)&&[1,-1].includes(p.flip)&&[1,-1].includes(p.fy)?p:defaultHEPose(c)}
+function setupHEControls(){
+ const bar=document.createElement('div');bar.id='heOrientationControls';bar.style.cssText='padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#182534;color:#eef4fa';
+ const label=document.createElement('label');label.textContent='H&E orientation · core ';const sel=document.createElement('select');sel.id='heOrientationCore';sel.setAttribute('aria-label','Core for H&E orientation');for(const c of CORES){const o=document.createElement('option');o.value=c.id;o.textContent=c.id;sel.append(o)}label.append(sel);bar.append(label);
+ const status=document.createElement('span');status.id='heOrientationStatus';status.style.fontSize='12px';
+ function refresh(){const p=samplePose(sel.value);status.textContent=`H&E ${p.angle}° clockwise · Flip H ${p.flip<0?'on':'off'} · Flip V ${p.fy<0?'on':'off'} · display only`;}
+ function change(action){const c=sel.value,p={...samplePose(c)};if(action==='reset')delete sampleHEPose[c];else{if(action==='left')p.angle=(p.angle+270)%360;if(action==='right')p.angle=(p.angle+90)%360;if(action==='h')p.flip*=-1;if(action==='v')p.fy*=-1;sampleHEPose[c]=p}try{localStorage.setItem(SAMPLE_HE_STORE,JSON.stringify(sampleHEPose))}catch(e){}refresh();drawAll();}
+ for(const [action,title] of [['left','Rotate H&E −90°'],['right','Rotate H&E +90°'],['h','Flip H'],['v','Flip V'],['reset','Default orientation']]){const b=document.createElement('button');b.type='button';b.textContent=title;b.dataset.heAction=action;b.onclick=()=>change(action);bar.append(b)}
+ const note=document.createElement('span');note.textContent='Changes save in this browser. Orientation does not confirm core identity.';note.style.fontSize='12px';bar.append(status,note);sel.onchange=refresh;
+ document.querySelector('.panels').before(bar);refresh();
+}
+if(Object.keys(DATA.heImages||{}).length){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupHEControls);else setupHEControls();}
+
+const HEIMAGES={};
+function drawHE(p){
+ const ctx=p.ctx;ctx.fillStyle='#fff';ctx.fillRect(0,0,p.W,p.H);
+ for(const c of CORES){if(!shownCore[c.id])continue;let im=HEIMAGES[c.id];if(!im){im=HEIMAGES[c.id]=new Image();im.onload=()=>drawAll();im.src=DATA.heImages[c.id]}
+  if(!im.complete||!im.naturalWidth)continue;
+  const b=c.box,w=b[2]-b[0],h=b[3]-b[1],pose=samplePose(c.id),odd=pose.angle%180!==0,scale=Math.min(w/(odd?im.height:im.width),h/(odd?im.width:im.height)),iw=im.width*scale,ih=im.height*scale;
+  ctx.save();ctx.translate(SX((b[0]+b[2])/2),SY((b[1]+b[3])/2));ctx.rotate(pose.angle*Math.PI/180);ctx.scale(pose.flip,pose.fy);ctx.drawImage(im,-iw*view.s/2,-ih*view.s/2,iw*view.s,ih*view.s);ctx.restore();
+ }
+ drawCores(p);p.lg.innerHTML='<div class="lt">H&amp;E</div><div class="note">Original tissue images · one image per named core · shared pan/zoom. Display fit, not cell-level registration.</div>';
+}
+function drawPending(p){return;
+ if(p.feat==='__he__')return;
+ const ctx=p.ctx;ctx.save();ctx.font='13px system-ui';
+ for(const c of CORES){if(!shownCore[c.id]||!c.pending_fovs.length&&c.n>0)continue;
+  const text=c.n?''+c.pending_fovs.join(', '):''+(c.fovs.length?' · FOV '+c.fovs.join(', '):' · RAW not identified');
+  const x=SX(c.box[0])+8,y=SY(c.box[3])-12;ctx.fillStyle='rgba(20,30,40,.88)';ctx.fillRect(x-4,y-16,Math.min(ctx.measureText(text).width+8,p.W-x),22);ctx.fillStyle='#fff';ctx.fillText(text,x,y,Math.max(30,p.W-x-5));
+ }ctx.restore();
+}
+
+const LQC=new Uint8Array(N);for(let i=0;i<N;i++)LQC[i]=(HIDDEN_DEFAULT.has(DATA.type[i])||HIDDEN_DEFAULT.has(DATA.subtype[i])||HIDDEN_DEFAULT.has(DATA.subL2[i]))?1:0;function lqHidden(p,f,i){if(!LQC[i])return false;if(f&&f.kind==="cat"&&p.state)return [DATA.type[i],DATA.subtype[i],DATA.subL2[i]].some(v=>HIDDEN_DEFAULT.has(v)&&(p.state.get(v)||0)===2);return true}
+const RAWHI=DATA.rawHi||[],RAWHI_MIN=0.6;function drawRawHi(p){if(!RAWHI.length||view.s*DPR<RAWHI_MIN)return;const ctx=p.ctx;RAWHI.forEach(h=>{if(!shownCore[h.core])return;const e=h.ext,X0=SX(e[0]),Y0=SY(e[1]),X1=SX(e[2]),Y1=SY(e[3]);if(X1<0||Y1<0||X0>p.W||Y0>p.H)return;if(!h.img){h.img=new Image();h.img.onload=()=>drawAll();h.img.src=h.src}if(h.img.complete&&h.img.naturalWidth){ctx.imageSmoothingEnabled=true;ctx.drawImage(h.img,X0,Y0,X1-X0,Y1-Y0)}})}
+function drawP(p){p.tlsRects=[];const ctx=p.ctx,f=FEATS.find(x=>x.k===p.feat);ctx.setTransform(DPR,0,0,DPR,0,0);if(typeof _updGmaxUI==="function")_updGmaxUI();
+ if(f.kind==="he"){drawHE(p);return}
+ if(f.kind==="rawimg"){ctx.fillStyle="#000";ctx.fillRect(0,0,p.W,p.H);if(RAWIMG&&RAWIMG.complete&&RAWIMG.naturalWidth){const e=DATA.rawExtent;ctx.imageSmoothingEnabled=true;ctx.drawImage(RAWIMG,SX(e[0]),SY(e[1]),(e[2]-e[0])*view.s,(e[3]-e[1])*view.s)}drawRawHi(p);maskHiddenCores(p,"#000");drawCores(p);drawTLS(p);drawPending(p);legend(p,f);return}
+ if(f.kind==="rgbpath"){ctx.fillStyle="#ffffff";ctx.fillRect(0,0,p.W,p.H)}else if(f.kind==="rgbraw"){ctx.fillStyle="#000000";ctx.fillRect(0,0,p.W,p.H)}else ctx.clearRect(0,0,p.W,p.H);
+ ctx.globalAlpha=POP;let rng=null,vals=null,pal=null;
+ if(f.kind==="num"){if(!RNG[f.k])RNG[f.k]=range(f.arr);rng=RNG[f.k]}else if(f.kind==="cat"){vals=CATS[f.k].vals;pal=CATS[f.k].pal}
+ let _gc=null;if(f.kind==="gene"){_gc=geneCodes(f.gi)}
+ const _hi=[];for(let i=0;i<N;i++){if(coreHidden(i))continue;if(lqHidden(p,f,i))continue;if(f.kind==="cat"&&p.state){const _st=p.state.get(vals[i])||0;if(_st===2)continue;if(_st===1){_hi.push(i);continue}}const X=SX(XS[i]),Y=SY(YS[i]);if(X<-5||X>p.W+5||Y<-5||Y>p.H+5)continue;let col;
+   if(f.kind==="cat")col=pal[vals[i]]||"#888";else if(f.kind==="num")col=viridis((f.arr[i]-rng[0])/(rng[1]-rng[0]));else if(f.kind==="gene")col=viridisR(_gc[i]/(255*GLIM));else if(f.kind==="rgbraw")col=rgbRaw(i);else col=rgbPath(i);
+   ctx.fillStyle=col;ctx.beginPath();ctx.arc(X,Y,PSZ,0,6.2832);ctx.fill()}
+ if(f.kind==="cat"&&_hi.length){const _hp=CATS[f.k].pal;ctx.globalAlpha=POP;for(const i of _hi){const X=SX(XS[i]),Y=SY(YS[i]);if(X<-5||X>p.W+5||Y<-5||Y>p.H+5)continue;ctx.fillStyle=_hp[vals[i]]||"#888";ctx.beginPath();ctx.arc(X,Y,PSZ*1.5,0,6.2832);ctx.fill()}}ctx.globalAlpha=1;drawCores(p);drawTLS(p);drawPending(p);legend(p,f,rng)}
+const L3TO2={};for(let i=0;i<N;i++)L3TO2[DATA.subtype[i]]=DATA.subL2[i];const L3U=[...new Set(DATA.subtype)];
+function _l3row(p,pal,cnt,v,cls){const st=p.state?(p.state.get(v)||0):0;return `<div class="li${cls}${st===1?" hi":""}${st===2?" hid":""}" data-cat="${v}"><span class="sw" title="click to change color" style="background:${pal[v]}"></span>${v} <span class="cnt">(${cnt[v]})</span></div>`}
+function legendL2(p,pal,cnt,u){const G={},gc={};u.forEach(v=>{const g=L3TO2[v]||v;(G[g]=G[g]||[]).push(v);gc[g]=(gc[g]||0)+cnt[v]});
+ const pal2=(CATS.__subL2__&&CATS.__subL2__.pal)||{};const gs=Object.keys(G).sort((a,b)=>(HIDDEN_DEFAULT.has(a)-HIDDEN_DEFAULT.has(b))||(gc[b]-gc[a]));
+ return `<div class="lhint">click an L2 group: hide / show all its subtypes</div>`+gs.map(g=>{const k=G[g],nh=k.filter(v=>(p.state.get(v)||0)===2).length,cls=nh===k.length?" hid":(nh?" part":"");
+  const one=k.length===1&&k[0]===g,col=one?pal[g]:(pal2[g]||"#888");
+  return `<div class="l2h${cls}" data-l2="${g}" title="click to hide / show ${one?g:"all "+g}"><span class="sw2" style="background:${col}"></span>${g} <span class="cnt">(${gc[g]})</span></div>`+(one?"":k.map(v=>_l3row(p,pal,cnt,v," l3")).join(""))}).join("")}
+function legend(p,f,rng){let h="";
+ if(f.kind==="cat"){const pal=CATS[f.k].pal,cnt={};CATS[f.k].vals.forEach(v=>cnt[v]=(cnt[v]||0)+1);const u=[...new Set(CATS[f.k].vals)].sort((a,b)=>cnt[b]-cnt[a]);
+   const anyH=p.state&&p.state.size>0;h=`<div class="lt" data-reset title="click to reset all">${f.label}${anyH?' <span class=&quot;cnt&quot;>(reset)</span>':''}</div><div class="lhint">click type: highlight(1.5x) → hide → normal · title=reset · click swatch=change color</div>`+(f.k==="__subtype__"?legendL2(p,pal,cnt,u):u.map(v=>_l3row(p,pal,cnt,v,"")).join(""))}
+ else if(f.kind==="rgbraw"){h=`<div class="lt">RAW IF composite</div><div class="li"><span class="sw" style="background:#ff3b3b"></span>PanCK (epithelium)</div><div class="li"><span class="sw" style="background:#3bff3b"></span>CD45 (immune)</div><div class="li"><span class="sw" style="background:#3b6bff"></span>DAPI (nuclei)</div><div class="note">additive fluorescence · black bg</div>`}
+ else if(f.kind==="rgbpath"){h=`<div class="lt">Virtual H&amp;E</div><div class="li"><span class="sw" style="background:#5b2a83"></span>Nuclei — DAPI (hematoxylin)</div><div class="li"><span class="sw" style="background:#e58fbf"></span>Cytoplasm — PanCK (eosin)</div><div class="note">per-cell composite of IF channels</div>`}
+ else if(f.kind==="rawimg"){h=`<div class="lt">CellComposite morphology</div><div class="li"><span class="sw" style="background:#2bd42b"></span>PanCK / cytokeratin (green)</div><div class="li"><span class="sw" style="background:#3b6bff"></span>DAPI nuclei (blue)</div><div class="li"><span class="sw" style="background:#e63b3b"></span>other IF (red)</div><div class="note">actual CosMx morphology image (raw pixels) · zoom/pan synced${RAWHI.length?" · full resolution (0.25 µm/px) when zoomed in":""}</div>`}
+ else if(f.kind==="gene"){const gm=GMAX[f.gi]*GLIM,st=[];for(let i=0;i<=10;i++)st.push(viridisR(i/10));h=`<div class="lt">${f.label}</div><div class="cbar" style="background:linear-gradient(90deg,${st.join(",")})"></div><div class="cbnums"><span>0</span><span>${gm.toFixed(2)}</span></div><div class="note">log-norm expr · reverse-viridis (dark=high) · scale max ${(GLIM*100)|0}% of gene max ${GMAX[f.gi].toFixed(2)}</div>`} else{const st=[];for(let i=0;i<=10;i++)st.push(viridis(i/10));h=`<div class="lt">${f.label}</div><div class="cbar" style="background:linear-gradient(90deg,${st.join(",")})"></div><div class="cbnums"><span>${rng[0].toFixed(1)}</span><span>${rng[1].toFixed(1)}</span></div><div class="note">2–98th pct · ${f.k.startsWith("ch:")?"IF signal":"log-norm expr"}</div>`}
+ p.lg.innerHTML=h}
+function onWheel(e){e.preventDefault();const p=panels.find(q=>q.cv===e.target)||panels[0];const r=p.cv.getBoundingClientRect(),mx=(e.clientX-r.left)*p.W/(r.width||1),my=(e.clientY-r.top)*p.H/(r.height||1),k=Math.exp(-e.deltaY*0.0015),wx=(mx-view.tx)/view.s,wy=(my-view.ty)/view.s;view.s*=k;view.tx=mx-wx*view.s;view.ty=my-wy*view.s;drawAll()}
+let drag=null;const tt=document.getElementById("tt");
+function onDown(e){drag={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty}}
+function onMove(e){if(drag){view.tx=drag.tx+(e.clientX-drag.x);view.ty=drag.ty+(e.clientY-drag.y);drawAll();return}hover(e)}
+function hover(e){const p=panels.find(q=>q.cv===e.target);if(!p)return;const r=p.cv.getBoundingClientRect(),mx=(e.clientX-r.left)*p.W/(r.width||1),my=(e.clientY-r.top)*p.H/(r.height||1);const _tl=tlsLabelAt(p,mx,my);if(_tl>=0){p.cv.style.cursor="help";tt.innerHTML=tlsTip(TLSR[_tl]);tt.style.left=(e.clientX+14)+"px";tt.style.top=(e.clientY+14)+"px";tt.style.display="block";return}const _lc=coreLabelAt(p,mx,my);p.cv.style.cursor=_lc>=0?"pointer":"crosshair";if(_lc>=0){tt.innerHTML=coreTip(CORES[_lc]);tt.style.left=(e.clientX+14)+"px";tt.style.top=(e.clientY+14)+"px";tt.style.display="block";return}{const _pf=FEATS.find(x=>x.k===p.feat);if(!_pf||_pf.kind==="rawimg"||_pf.kind==="he"){tt.style.display="none";return}}let best=-1,bd=Math.max(64,(PSZ+3)*(PSZ+3));const _hf=FEATS.find(x=>x.k===p.feat),_hv=(_hf&&_hf.kind==="cat"&&p.state)?CATS[_hf.k].vals:null;for(let i=0;i<N;i++){if(coreHidden(i))continue;if(lqHidden(p,_hf,i))continue;if(_hv&&(p.state.get(_hv[i])||0)===2)continue;const dx=SX(XS[i])-mx,dy=SY(YS[i])-my,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}}if(best<0){tt.style.display="none";return}const f=FEATS.find(x=>x.k===p.feat);let val=f.kind==="cat"?CATS[f.k].vals[best]:(f.kind==="num"?f.arr[best].toFixed(f.k.startsWith("ch:")?0:2):(f.kind==="gene"?(geneCodes(f.gi)[best]/255*GMAX[f.gi]).toFixed(2):"—"));tt.innerHTML=`${COREIDX[best]>=0?`<span style="color:${coreCol(CORES[COREIDX[best]])}">${CORES[COREIDX[best]].id}</span>${CORES[COREIDX[best]].short?" · "+CORES[COREIDX[best]].short:""}<br>`:""}<b>${DATA.type[best]}</b> / ${DATA.subtype[best]}<br>${Array.isArray(DATA.fov)?"FOV "+DATA.fov[best]+" · ":""}${DATA.channels.PanCK?"PanCK "+(DATA.channels.PanCK[best]|0):""}<br>${f.kind==="cat"||f.kind==="num"||f.kind==="gene"?f.label+": <b>"+val+"</b>":f.label}`;tt.style.left=(e.clientX+14)+"px";tt.style.top=(e.clientY+14)+"px";tt.style.display="block"}
+panels.forEach(p=>{p.cv.addEventListener("wheel",onWheel,{passive:false});p.cv.addEventListener("mousedown",onDown);p.cv.addEventListener("mousemove",onMove);p.cv.addEventListener("mouseleave",()=>tt.style.display="none")});
+window.addEventListener("mouseup",()=>drag=null);
+document.getElementById("psz").oninput=e=>{PSZ=+e.target.value;drawAll()};
+document.getElementById("pop").oninput=e=>{POP=+e.target.value;drawAll()};
+document.getElementById("gmax").oninput=e=>{GLIM=+e.target.value/100;document.getElementById("gmaxlbl").textContent=e.target.value+"%";drawAll()};
+document.getElementById("reset").onclick=()=>{fit();drawAll()};
+let RAWIMG=null;if(DATA.rawImage){RAWIMG=new Image();RAWIMG.onload=()=>drawAll();RAWIMG.src=DATA.rawImage}
+let showTLS=true;const TLSR=DATA.tlsRegions||[];
+const REGION=CFG.region||{};const TLS_STYLE={1:{col:"#ffd400",dash:[]},2:{col:"#ffd400",dash:[9,5]},3:{col:"#ff9f1c",dash:[3,4]}};for(const [k,v] of Object.entries(REGION.tiers||{}))TLS_STYLE[k]=Object.assign({},TLS_STYLE[k]||TLS_STYLE[3],v);
+function drawTLS(p){p.tlsRects=[];if(!showTLS||!TLSR.length)return;const ctx=p.ctx;ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);
+ ctx.font='bold 12px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';ctx.textBaseline="middle";ctx.textAlign="center";const CL=p.labelRects||[];
+ TLSR.forEach((R,k)=>{if(!shownCore[R.core])return;const st=TLS_STYLE[R.tier]||TLS_STYLE[3];ctx.strokeStyle=st.col;ctx.lineWidth=2.4;ctx.setLineDash(st.dash);ctx.beginPath();
+  let y0=Infinity,y1=-Infinity;R.poly.forEach((pt,i)=>{const X=SX(pt[0]),Y=SY(pt[1]);if(Y<y0)y0=Y;if(Y>y1)y1=Y;i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+  const t=(REGION.label||"Region")+" · Tier "+R.tier,tw=ctx.measureText(t).width+12,th=16,cx=SX(R.lx);
+  const place=y=>{const X=Math.min(Math.max(cx,tw/2+2),p.W-tw/2-2),Y=Math.min(Math.max(y,th/2+2),p.H-th/2-2);return [X,Y]};
+  const hit=(X,Y)=>CL.some(r=>X-tw/2<r.x1&&X+tw/2>r.x0&&Y-th/2<r.y1&&Y+th/2>r.y0)||p.tlsRects.some(r=>X-tw/2<r[2]&&X+tw/2>r[0]&&Y-th/2<r[3]&&Y+th/2>r[1]);
+  let [X,Y]=place(y0-th/2-5);if(hit(X,Y)){const b=place(y1+th/2+5);if(!hit(b[0],b[1]))[X,Y]=b}
+  ctx.fillStyle="rgba(15,18,22,0.88)";ctx.fillRect(X-tw/2,Y-th/2,tw,th);ctx.strokeStyle=st.col;ctx.lineWidth=1;ctx.strokeRect(X-tw/2,Y-th/2,tw,th);ctx.fillStyle=st.col;ctx.fillText(t,X,Y+0.5);
+  p.tlsRects.push([X-tw/2,Y-th/2,X+tw/2,Y+th/2,k])});ctx.restore()}
+function tlsLabelAt(p,mx,my){const r=(p.tlsRects||[]).find(q=>mx>=q[0]&&mx<=q[2]&&my>=q[1]&&my<=q[3]);return r?r[4]:-1}
+function tlsTip(R){const st=TLS_STYLE[R.tier]||TLS_STYLE[3];return `<b style="color:${st.col}">${REGION.label||"Region"} · Tier ${R.tier}</b>${R.id?" ("+R.id+")":""}<br>${R.core}${(R.lines||[]).map(l=>"<br>"+l).join("")}${st.text?"<br><i>"+st.text+"</i>":""}${REGION.note?"<br><i>"+REGION.note+"</i>":""}`}
+(function(){const _c=document.getElementById("tlschk");if(!_c)return;if(!TLSR.length){const _w=_c.closest(".gc")||_c.parentElement;_w.style.display="none";return}_c.checked=true;_c.onchange=e=>{showTLS=e.target.checked;drawAll()}})();
+(function(){const c=document.getElementById("framechk");if(!c)return;if(!CORES.length){c.disabled=true;c.parentElement.style.opacity=0.45;c.parentElement.title="No core annotation in this viewer";showFrames=false;return}c.onchange=e=>{showFrames=e.target.checked;drawAll()}})();
+window.addEventListener("resize",resize);resize();if(window.ResizeObserver){let _rq=0;const _ro=new ResizeObserver(()=>{if(_rq)return;_rq=requestAnimationFrame(()=>{_rq=0;if(panels.some(p=>{const r=p.cv.parentElement.getBoundingClientRect();return Math.abs(r.width-p.W)>0.5||Math.abs(r.height-p.H)>0.5}))resize()})});panels.forEach(p=>_ro.observe(p.cv.parentElement))}
+</script></body></html>

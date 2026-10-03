@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "Config for the synthetic demo (make_demo_data.py). Copy this file as a starting point for your own",
+    "cohort_config.json. Every key is optional; see build_viewer.py DEFAULTS for the full list."
+  ],
+  "title": "CosMx TMA viewer (demo)",
+  "file_prefix": "viewer_",
+  "hidden_default": ["LowQuality"],
+  "levels": ["Cell type · L1", "Cell type · L2", "Cell type · L3"],
+  "palette": {"Epithelial": "#e6194B", "Stromal": "#9A6324", "Immune": "#4363d8", "LowQuality": "#c8c8c8"},
+  "channels": {"PanCK": "mean_panck", "CD45": "mean_cd45", "DAPI": "mean_dapi", "Membrane": "mean_membrane"},
+  "core_groups": {"group_1": {"label": "Group 1", "short": "G1", "color": "#00C2FF"},
+                  "group_2": {"label": "Group 2", "short": "G2", "color": "#FF5A5A"}},
+  "core_group_title": "Group",
+  "core_short_fields": ["annotation"],
+  "core_tooltip_fields": [{"label": "Annotation", "field": "annotation"}],
+  "core_summary_fields": [{"label": "Annotation", "field": "annotation"}],
+  "patient_fields": [{"label": "Arm", "field": "cohort_arm"}, {"label": "Age band", "field": "age_band"}],
+  "storage_prefix": "tmaviewer_demo",
+  "region": {"label": "Region", "toggle": "Example region", "note": "Synthetic example.",
+             "tiers": {"1": {"text": "Tier 1 description"}},
+             "info_fields": [{"label": "Summary", "field": "summary"}]},
+  "index": {"title": "CosMx TMA viewers (demo)", "subtitle": "Synthetic data only."}
+}

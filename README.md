@@ -1,145 +1,81 @@
 # cosmx-tma-viewer
 
-**Self-contained HTML viewers for CosMx TMA experiments — one file per patient,
-no server, no install.**
+**Self-contained HTML viewers for CosMx TMA experiments: one file per unit (e.g. patient × slide), no server, no install.**
 
-Scripts that turn a CosMx spatial-transcriptomics AnnData object into a
-self-contained, offline HTML viewer — one file per (patient, slide) unit, with
-no server and no network dependency.
+Each viewer is a single offline HTML file that carries, inline:
 
-Each built viewer carries, inline:
+- every cell as a point in slide microns, coloured by a three-level cell-type hierarchy (L1 / L2 / L3), any panel gene
+  or any IF channel;
+- the instrument morphology image of **every FOV** of every core, painted with exactly the same transform as the
+  cells, plus an optional **full-resolution layer** (e.g. 0.25 µm/px) that loads only when you zoom in;
+- an optional per-core H&E image in a synced second panel, with per-core rotate / flip controls;
+- a frame per TMA core with its own annotation, colour-coded by a core group you define;
+- optional **regions** (e.g. curated or detected structures) drawn as tier-styled outlines with an evidence tooltip;
+- two linked pan/zoom canvases, a searchable feature picker, click-to-recolour legends, per-cell hover.
 
-- every cell as a point in slide microns, coloured by major type (L1), subtype
-  (L2 / L3), putative-tumour flag, any of ~6,000 panel genes, or an IF channel;
-- the real CosMx `CellComposite` morphology mosaic as a synced second panel;
-- two linked pan/zoom canvases, a searchable feature picker, click-to-recolour
-  legends, and per-cell hover;
-- a frame per TMA core carrying that core's own pathology and treatment
-  timepoint (see `docs/core_annotation.md`).
+A landing page (`build_index.py`) lists every viewer with its cores, cell counts and optional per-core **flags**.
 
-**This repository is scripts only.** Built viewers embed per-patient clinical
-metadata and run 5–80 MB each; they, and every source matrix / label table /
-clinical workbook, are excluded by `.gitignore`. Keep it that way.
+**This repository is code only.** Built viewers embed study data and metadata; they, and every input table, image
+and count matrix, are excluded by `.gitignore`. `input/make_demo_data.py` generates a fully synthetic cohort so the
+whole pipeline can be run and tested without any real data.
+
+## Quick start (synthetic demo)
+
+```bash
+pip install numpy pandas scipy pillow requests websocket-client
+bash run_demo.sh            # writes demo/data, demo/out/*.html and demo/out/index.html, then runs the browser checks
+```
+
+![demo viewer](docs/img/demo_viewer.png)
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `input/` | Every script, plus `cohort_config.example.json` and the viewer shell `sample_viewer_template.html`. |
-| `docs/` | Feature checklist (the source of truth the verifier tests against), per-core annotation notes, morphology-resolution recipe, pipeline notes. |
+| `input/build_viewer.py` | Builds one viewer per unit from plain tables (see `docs/inputs.md`). |
+| `input/viewer_template.html` | The viewer shell (HTML/CSS/JS). The builder fills in `DATA` and `CFG`; nothing study-specific is hard-coded. |
+| `input/build_index.py` | Landing page; reads every figure back out of the built viewers; optional per-core flags. |
+| `input/make_fov_tiles.py` | Resizes raw FOV images into overview / full-resolution tiles (run where the raw images live). |
+| `input/verify_viewer.py` | Headless-Chrome checks of what a user actually sees (see `docs/features.md`). |
+| `input/make_demo_data.py`, `input/demo_config.json` | Synthetic demo cohort and its config. |
+| `input/cohort_config.example.json` | Annotated config template; copy to `cohort_config.json` (gitignored). |
+| `docs/` | Input formats, feature list, changelog. |
+| `legacy/` | The previous AnnData-based pipeline (`build_sample_viewer.py` + post-processing chain), kept for reference. |
 
-Inside `input/`, the scripts fall into four groups:
-
-| Group | Files |
-|---|---|
-| Generator | `build_sample_viewer.py`, `sample_viewer_template.html` |
-| Geometry post-processing | `degap_viewer.py`, `regrid_viewer.py`, `regrid_by_core.py`, `assign_subcores.py`, `finalize_region_polygon.py` |
-| Per-core annotation | `inject_core_clinical.py`, `make_template_cores.py` |
-| Morphology (HPC) | `stitch_one.py`, `stitch_one_hires_1umpx.py`, `stitch_one_hires_025umpx.py`, `stitch_morphology*.sbatch`, `verify_only_morphology_changed.py` |
-| Verification / driver | `verify_viewer_features.py`, `verify_cohort.py`, `verify_overlay.py`, `run_all.sh` |
-| Landing page | `extract_core_summary.py`, `build_all_viewer_index.py` |
-| Sharing | `splice.py`, `deidentify_viewer.py` |
-
-## How a viewer is built
-
-```
-build_sample_viewer.py     object + labels + FOV-to-unit join -> DATA -> template -> HTML
-  |
-assign_subcores.py         authoritative core_id, then physical sub-core split   (PRE-degap)
-  |
-degap_viewer.py            compact empty FOV-layout bands, cells + mosaic together
-  |
-regrid_by_core.py          one tidy grid tile per sub-core   (or regrid_viewer.py, legacy)
-  |
-inject_core_clinical.py    attach per-core pathology / timepoint / grade / stage
-  |
-finalize_region_polygon.py convex hull for configured important regions, final coordinates
-  |
-verify_viewer_features.py  ~30 mechanical checks; non-zero exit gates a deploy
-```
-
-`run_all.sh` drives a cohort end to end (manifest -> HPC stitch -> pull -> build ->
-post-process -> verify -> deploy). The post-processing scripts only ever rewrite
-the `const DATA={...}` span, never the HTML/CSS/JS shell, so the shell stays
-byte-identical to `input/sample_viewer_template.html`. That contract is what
-lets a UI change be applied to already-built viewers by swapping the shell
-instead of rebuilding from the expression matrix.
-
-## Landing page
-
-`build_all_viewer_index.py` writes a searchable card per viewer. Each card shows,
-**per patient**: the number of cores (with the sub-core count when a core covers
-more than one piece of tissue), the pre- and post-treatment core counts, and TTR
-in months, alongside the cell count for that viewer.
-
-Those figures are read back **out of the built viewers** by
-`extract_core_summary.py` into `viewer_core_summary.tsv`, rather than recomputed
-from the source tables, so the page cannot drift from what the viewers display.
-A core belongs to exactly one slide, so rolling per-viewer rows up to the patient
-double-counts nothing; where a patient has cores on several slides the card adds
-a "N on this slide" note so it does not overstate what it opens.
+## Building your own viewers
 
 ```bash
-python input/extract_core_summary.py <viewer_dir> --out viewer_core_summary.tsv
-python input/build_all_viewer_index.py --viewer-dir <viewer_dir> \
-       --summary viewer_core_summary.tsv --manifest <viewer_units.tsv> \
-       --fov-meta <fov_meta_qc.tsv> --out <viewer_dir>/index.html
+cp input/cohort_config.example.json cohort_config.json        # edit: wording, colours, fields; keep it out of git
+python input/build_viewer.py --cells cells.tsv.gz --cores cores.tsv --units units.tsv \
+       --fov-positions fov_positions.tsv --config cohort_config.json --out viewers \
+       --counts-dir export/ --fov-images tiles_overview/ --fov-images-hires tiles_full/ \
+       --he-images he/ --regions regions.tsv
+python input/build_index.py viewers --flags flags.tsv --config cohort_config.json
+python input/verify_viewer.py viewers/*.html --report verify.json      # exit code 1 if any check fails
 ```
 
-Without the summary file the cards simply omit those chips.
+Only `--cells --cores --units --fov-positions --out` are required; every other input adds a layer.
 
-## Sharing a viewer
+## Design notes
 
-`deidentify_viewer.py` masks every clinical and patient attribute in a built
-viewer — the patient chips, the per-core pathology / stage / grade / block, and
-the per-cell pathology annotation — leaving the field labels in place so the
-interface still reads correctly. Structural fields (coordinates, FOV numbers,
-cell-type labels, core geometry) are kept so the result still demonstrates what
-the tool does.
+- **One transform per core.** Native slide coordinates are `X = px · (x_global + x_local)`, `Y = px · (−y_global + y_local)`
+  (CosMx convention, `px` = 0.12028 µm). Each core is moved into its layout slot by a single translation; cells, FOV
+  tiles, full-resolution tiles and regions all go through it, so they stay registered by construction and every core
+  keeps true microns (no per-axis stretching).
+- **Frames contain every cell.** A core's frame is its cells' bounding box plus a margin; the slot grows to fit the
+  largest core. Rows of cores can share one frame top/bottom (`layout.align_rows`).
+- **Hidden-by-default categories** (e.g. a QC-fail class) are hidden in every view (cell types, genes, channels) and
+  never hovered; in cell-type views their legend entry can still show them.
+- **Morphology and H&E layers show no cell tooltip**; hovering a core or region label shows its annotation.
+- **Full-resolution morphology is lazy**: per-core images are decoded only when the view is zoomed beyond the overview
+  resolution and the core is on screen.
+- Built viewers are large (5–80 MB, mostly the expression store and images). Share them as files, not through git.
 
-```bash
-python input/deidentify_viewer.py <built.html> example_output.html
-```
+## Sharing built viewers
 
-It does **not** strip the expression matrix, the cell coordinates or the embedded
-tissue morphology image. Those carry no clinical labels afterwards but remain
-sample-derived measurements; decide separately whether that is acceptable for
-your audience.
+Built viewers contain whatever unit, core and annotation fields you configure. Review the config before sharing;
+`legacy/deidentify_viewer.py` shows one way to mask annotation fields in an already-built viewer.
 
-## Cohort configuration
+## License
 
-Anything specific to a study — unit ids, per-unit pathology labels, curated important region
-region coordinates, expected cohort counts — is **study data, not code**, and is
-read at runtime from `cohort_config.json` in the repository root. That file is
-gitignored. Only `cohort_config.example.json`, which contains placeholders, is
-tracked.
-
-```bash
-cp cohort_config.example.json cohort_config.json   # then fill in for your cohort
-```
-
-Every key is optional: a missing file or key disables the feature or check that
-uses it rather than failing. With no config at all the pipeline still builds
-viewers — important-region overlays are simply absent and the cohort-integrity checks report
-`skipped` instead of comparing against expected values.
-
-## Conventions
-
-- Every script opens with a header block giving description, inputs, outputs,
-  environment, key dependencies and validation date, then a `DEFAULTS` dict
-  holding every tunable value.
-- Data paths in `DEFAULTS` are `<project_root>/…` placeholders, not real
-  locations: pass them explicitly (`--h5ad`, `--labels`, `--fov-meta-qc`,
-  `--template`, `--rawimg-dir`, `--outdir`, `--src`, …) or edit `_ROOT` once for
-  your own layout. Paths that resolve relative to the script itself (template,
-  output dir) work as-is.
-- `verify_viewer_features.py` greps the built HTML for literal UI markers
-  (`id="psz"`, `.li[data-cat]`, `function drawRegion(p)`, …). Renaming one of those
-  in the template fails the gate even if the UI still works — update both.
-
-## Requirements
-
-Python 3.9+ with `numpy`, `pandas`, `scipy`, `h5py`, `Pillow`, and `openpyxl`
-for the clinical-workbook step. The viewers themselves need only a browser.
-The morphology stitchers additionally expect the CosMx `flatFiles` /
-`DecodedFiles` trees and are written to run as a SLURM array, one task per unit.
+MIT (see `LICENSE`).
